@@ -1,283 +1,520 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claud v1.0 — Overland Planner</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Claud v1.1 — Overland Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
-      --sand: #C9B99A;
-      --rust: #B5522B;
-      --pine: #2E4A3E;
-      --fog: #8A9B8E;
-      --bone: #EDE8DF;
-      --ink: #1C2420;
-      --warm-bg: #F5F0E8;
-      --card-bg: #FDFAF5;
-      --border: rgba(44,36,28,0.12);
+      --bg:       #161614;
+      --bg2:      #1E1E1B;
+      --surface:  #242421;
+      --surface2: #2C2C28;
+      --surface3: #363632;
+      --orange:   #E8720C;
+      --orange2:  #F5A623;
+      --green:    #4CAF77;
+      --red:      #E05252;
+      --blue:     #5B9BD5;
+      --text:     #F0EDE8;
+      --text2:    #A8A49E;
+      --text3:    #5A5A56;
+      --border:   rgba(255,255,255,0.07);
+      --border2:  rgba(255,255,255,0.12);
     }
-
+    html { font-size: 16px; background: var(--bg); }
     body {
-      background: var(--warm-bg);
-      font-family: 'Barlow', sans-serif;
-      color: var(--ink);
+      background: var(--bg);
+      font-family: 'Outfit', sans-serif;
+      color: var(--text);
       min-height: 100vh;
+      padding-bottom: 90px;
+      overscroll-behavior: none;
     }
 
-    .app { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
-
-    /* Header */
-    .header { display: flex; align-items: flex-end; gap: 1.5rem; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
-    .header-badge { background: var(--rust); color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 2px; padding: 4px 10px; border-radius: 3px; text-transform: uppercase; margin-bottom: 6px; display: inline-block; }
-    .header h1 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 34px; line-height: 1; color: var(--ink); }
-    .header p { font-size: 14px; color: #5A6B65; margin-top: 5px; font-weight: 300; }
-
-    /* Sections */
-    .section { background: var(--card-bg); border: 0.5px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
-    .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--fog); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
-    .section-label::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
-
-    /* Form */
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    label { font-size: 13px; color: #5A6B65; display: block; margin-bottom: 5px; }
-    input[type=text], input[type=date], input[type=number], select, textarea {
-      width: 100%; font-family: 'Barlow', sans-serif; font-size: 14px; color: var(--ink);
-      background: var(--warm-bg); border: 0.5px solid rgba(44,36,28,0.2);
-      border-radius: 6px; padding: 9px 12px; outline: none; transition: border-color 0.15s;
+    /* ── HEADER ── */
+    .hdr {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      position: sticky; top: 0; z-index: 200;
     }
-    input:focus, select:focus, textarea:focus { border-color: var(--rust); }
-    textarea { resize: vertical; min-height: 80px; }
-    select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235A6B65'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .hdr-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+    .hdr-step { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--orange); letter-spacing: 2px; text-transform: uppercase; }
+    .hdr-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .hdr-sub { font-size: 11px; color: var(--text2); letter-spacing: 0.3px; font-family: 'JetBrains Mono', monospace; }
+    .hdr-badge { background: var(--orange); color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; padding: 4px 9px; border-radius: 20px; }
 
-    /* Upload */
-    .upload-zone { border: 1.5px dashed var(--sand); border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden; }
-    .upload-zone:hover { border-color: var(--rust); background: rgba(181,82,43,0.04); }
-    .upload-zone.has-file { border-color: var(--pine); background: rgba(46,74,62,0.05); }
-    .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .upload-icon { font-size: 26px; margin-bottom: 8px; }
-    .upload-text { font-size: 14px; color: #5A6B65; }
-    .upload-text strong { color: var(--rust); }
-    .upload-status { font-size: 12px; color: var(--pine); margin-top: 6px; font-weight: 500; }
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+    }
+    .stat { text-align: center; padding: 0 4px; border-right: 1px solid var(--border); }
+    .stat:last-child { border-right: none; }
+    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 4px; }
+    .stat-val.orange { color: var(--orange); }
+    .stat-val.red { color: var(--red); }
+    .stat-val.green { color: var(--green); }
+    .stat-lbl { font-size: 9px; color: var(--text3); letter-spacing: 1.2px; text-transform: uppercase; font-weight: 500; }
 
-    /* Mode cards */
-    .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .mode-card { border: 0.5px solid var(--border); border-radius: 8px; padding: 14px 12px; cursor: pointer; transition: all 0.15s; background: var(--warm-bg); text-align: left; }
-    .mode-card:hover { border-color: var(--sand); }
-    .mode-card.selected { border-color: var(--rust); background: rgba(181,82,43,0.06); }
-    .mode-card .mode-icon { font-size: 18px; margin-bottom: 6px; }
-    .mode-card .mode-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink); }
-    .mode-card .mode-desc { font-size: 11px; color: #5A6B65; margin-top: 3px; line-height: 1.4; }
+    /* ── FILTERS ── */
+    .filter-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 10px 14px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+    .filter-wrap::-webkit-scrollbar { display: none; }
+    .filter-row { display: flex; gap: 8px; width: max-content; }
+    .pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text2); font-size: 12px; font-weight: 500;
+      padding: 7px 14px; border-radius: 20px; cursor: pointer;
+      white-space: nowrap; transition: all 0.15s; flex-shrink: 0;
+    }
+    .pill:active { transform: scale(0.96); }
+    .pill.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+    .pill .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-orange { background: var(--orange); }
+    .dot-green  { background: var(--green); }
+    .dot-red    { background: var(--red); }
+    .dot-blue   { background: var(--blue); }
+    .dot-white  { background: var(--text); }
 
-    /* Run button */
-    .btn-run { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: var(--rust); color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 1px; border: none; border-radius: 8px; padding: 15px; cursor: pointer; transition: background 0.15s; margin-top: 1.25rem; }
-    .btn-run:hover:not(:disabled) { background: #9E4422; }
-    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* ── SCROLL BODY ── */
+    .scroll-body { padding: 12px 14px; }
 
-    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    /* ── SECTION LABEL ── */
+    .section-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; color: var(--text3); letter-spacing: 2px;
+      text-transform: uppercase; padding: 0 2px;
+      margin: 16px 0 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── UPLOAD CARD ── */
+    .upload-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .upload-card.has-file { border-color: var(--green); }
+    .upload-card input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { font-size: 28px; margin-bottom: 8px; }
+    .upload-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .upload-sub { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+    .upload-status { font-size: 11px; color: var(--green); margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 500; min-height: 14px; }
+
+    /* ── PARAM CARD ── */
+    .param-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .param-row {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .param-row:last-child { border-bottom: none; }
+    .param-row.double { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; padding: 0; }
+    .param-half { padding: 12px 14px; border-right: 1px solid var(--border); }
+    .param-half:last-child { border-right: none; }
+    .param-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
+    input[type=text], input[type=date], input[type=number], textarea {
+      width: 100%; background: transparent; border: none; outline: none;
+      font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--text); padding: 0; -webkit-appearance: none;
+    }
+    input[type=date] { color-scheme: dark; }
+    textarea { resize: none; min-height: 52px; line-height: 1.5; font-size: 13px; }
+    input::placeholder, textarea::placeholder { color: var(--text3); }
+
+    /* ── MODE CARDS (timeline style) ── */
+    .mode-list { display: flex; flex-direction: column; gap: 8px; }
+    .mode-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border2);
+      border-radius: 12px;
+      padding: 14px 14px 14px 16px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 14px;
+      transition: border-color 0.15s, background 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .mode-card.selected { border-color: var(--orange); background: rgba(232,114,12,0.08); }
+    .mode-card:active { transform: scale(0.99); }
+    .mode-left-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); border-radius: 12px 0 0 12px; transition: background 0.15s; }
+    .mode-card.selected .mode-left-bar { background: var(--orange); }
+    .mode-emoji { font-size: 20px; flex-shrink: 0; }
+    .mode-info { flex: 1; min-width: 0; }
+    .mode-name { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.2; margin-bottom: 2px; }
+    .mode-desc { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+    .mode-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; letter-spacing: 1px; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; }
+    .tag-orange { background: rgba(232,114,12,0.15); color: var(--orange); border: 1px solid rgba(232,114,12,0.3); }
+    .tag-green  { background: rgba(76,175,119,0.15); color: var(--green);  border: 1px solid rgba(76,175,119,0.3); }
+    .tag-blue   { background: rgba(91,155,213,0.15); color: var(--blue);   border: 1px solid rgba(91,155,213,0.3); }
+    .tag-red    { background: rgba(224,82,82,0.15);  color: var(--red);    border: 1px solid rgba(224,82,82,0.3); }
+
+    /* ── PHASE INPUT ── */
+    .phase-extra {
+      display: none; margin-top: 10px;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 10px; overflow: hidden;
+    }
+    .phase-extra.show { display: block; }
+    .phase-extra .param-lbl { padding: 10px 14px 0; }
+    .phase-extra input { padding: 6px 14px 12px; }
+
+    /* ── BOTTOM BAR ── */
+    .bottom-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: var(--bg2);
+      border-top: 1px solid var(--border2);
+      padding: 12px 14px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .btn-gen {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; background: var(--orange); color: #fff;
+      font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px;
+      letter-spacing: 0.5px; border: none; border-radius: 10px;
+      padding: 16px; cursor: pointer; transition: all 0.15s;
+      -webkit-appearance: none;
+    }
+    .btn-gen:active { background: #C45E00; transform: scale(0.99); }
+    .btn-gen:disabled { opacity: 0.45; }
+    .btn-sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); text-align: center; margin-top: 6px; letter-spacing: 1px; text-transform: uppercase; }
+    .spinner { width: 17px; height: 17px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Output */
-    .output-section { margin-top: 1.75rem; }
-    .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-    .output-header h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; }
-    .copy-btn { font-size: 13px; color: #5A6B65; background: var(--card-bg); border: 0.5px solid var(--border); border-radius: 6px; padding: 6px 14px; cursor: pointer; font-family: 'Barlow', sans-serif; transition: all 0.15s; }
-    .copy-btn:hover { border-color: var(--sand); color: var(--ink); }
-
-    .output-box {
-      background: var(--card-bg); border: 0.5px solid var(--border); border-radius: 10px;
-      padding: 1.75rem; font-size: 14px; line-height: 1.75; word-break: break-word;
-      font-family: 'Barlow', sans-serif; color: var(--ink); max-height: 72vh; overflow-y: auto;
+    /* ── ERROR ── */
+    .error-box {
+      display: none; background: rgba(224,82,82,0.1); border: 1px solid rgba(224,82,82,0.4);
+      border-radius: 10px; padding: 12px 14px; color: var(--red);
+      font-size: 13px; line-height: 1.5; margin-bottom: 10px;
+      font-family: 'JetBrains Mono', monospace;
     }
-    .output-box.csv-mode { white-space: pre; font-family: monospace; font-size: 12.5px; }
-    .output-box h1, .output-box h2, .output-box h3 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; margin: 1.2rem 0 0.5rem; }
-    .output-box h1 { font-size: 22px; }
-    .output-box h2 { font-size: 18px; color: var(--rust); }
-    .output-box h3 { font-size: 15px; color: var(--pine); }
-    .output-box table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 1rem 0; }
-    .output-box th { background: var(--warm-bg); font-weight: 600; text-align: left; padding: 8px 10px; border: 0.5px solid var(--border); font-size: 12px; }
-    .output-box td { padding: 7px 10px; border: 0.5px solid var(--border); vertical-align: top; }
-    .output-box tr:hover td { background: rgba(201,185,154,0.1); }
-    .output-box code { background: var(--warm-bg); padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
-    .output-box ul, .output-box ol { padding-left: 1.5rem; margin: 0.5rem 0; }
-    .output-box li { margin-bottom: 3px; }
-    .output-box p { margin-bottom: 0.6rem; }
 
-    .error-box { background: rgba(181,82,43,0.08); border: 0.5px solid rgba(181,82,43,0.3); border-radius: 8px; padding: 1rem 1.25rem; color: var(--rust); font-size: 14px; margin-top: 1rem; }
-    .tip { font-size: 12px; color: #7A8B85; background: rgba(138,155,142,0.1); border-radius: 6px; padding: 8px 12px; margin-top: 8px; line-height: 1.5; }
-
-    @media (max-width: 600px) {
-      .grid2 { grid-template-columns: 1fr; }
-      .mode-grid { grid-template-columns: 1fr 1fr; }
-      .header h1 { font-size: 26px; }
+    /* ── OUTPUT ── */
+    .output-wrap { display: none; }
+    .output-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-bottom: none;
+      border-radius: 12px 12px 0 0;
     }
+    .output-hdr-left { display: flex; align-items: center; gap: 8px; }
+    .output-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
+    .output-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2); letter-spacing: 1.5px; text-transform: uppercase; }
+    .copy-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+      color: var(--text2); background: var(--surface3); border: 1px solid var(--border2);
+      border-radius: 6px; padding: 5px 12px; cursor: pointer; letter-spacing: 0.5px;
+    }
+    .copy-btn:active { background: var(--surface); }
+    .output-body {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 0 0 12px 12px;
+      padding: 16px 14px;
+      max-height: 60vh; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      font-size: 13px; line-height: 1.7;
+    }
+    .output-body.csv { font-family: 'JetBrains Mono', monospace; font-size: 10px; white-space: pre; overflow-x: auto; }
+
+    /* Output markdown */
+    .output-body h1 { font-size: 17px; font-weight: 700; color: var(--text); margin: 1rem 0 0.4rem; }
+    .output-body h2 { font-size: 14px; font-weight: 600; color: var(--orange); margin: 0.9rem 0 0.4rem; border-bottom: 1px solid rgba(232,114,12,0.2); padding-bottom: 5px; }
+    .output-body h3 { font-size: 12px; font-weight: 600; color: var(--text2); margin: 0.7rem 0 0.3rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase; }
+    .output-body p { margin-bottom: 0.5rem; color: var(--text2); }
+    .output-body p strong { color: var(--text); }
+    .output-body ul, .output-body ol { padding-left: 1.2rem; margin: 0.4rem 0; }
+    .output-body li { margin-bottom: 4px; color: var(--text2); }
+    .output-body li::marker { color: var(--orange); }
+    .output-body strong { color: var(--text); font-weight: 600; }
+    .output-body code { background: var(--surface2); color: var(--orange2); padding: 1px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+    .output-body hr { border: none; border-top: 1px solid var(--border2); margin: 1rem 0; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0.75rem 0; border-radius: 8px; border: 1px solid var(--border2); }
+    .output-body table { border-collapse: collapse; font-size: 11px; min-width: 500px; width: 100%; }
+    .output-body th { background: var(--surface3); color: var(--text2); font-weight: 600; text-align: left; padding: 8px 10px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border2); }
+    .output-body td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text2); }
+    .output-body tr:last-child td { border-bottom: none; }
+    .output-body tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Scrollbar for output */
+    .output-body::-webkit-scrollbar { width: 4px; }
+    .output-body::-webkit-scrollbar-track { background: transparent; }
+    .output-body::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
   </style>
 </head>
 <body>
-<div class="app">
 
-  <div class="header">
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
     <div>
-      <div class="header-badge">Claud v1.0</div>
-      <h1>Overlanding Trip Planner</h1>
-      <p>AI-powered expedition planning &middot; GX470 &middot; LA &rarr; Deadhorse</p>
+      <div class="hdr-step">Claud v1.1 · Expedition Planning</div>
+      <div class="hdr-title">Waypoints</div>
+    </div>
+    <div class="hdr-badge">GX470</div>
+  </div>
+  <div class="hdr-sub">LA → Deadhorse, AK &nbsp;·&nbsp; <span id="hdrDays">80 days</span> &nbsp;·&nbsp; <span id="hdrDate">Jun 1 2026</span></div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-val orange" id="statDays">80</div>
+    <div class="stat-lbl">Days</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="statMiles">~4,200</div>
+    <div class="stat-lbl">Est. Miles</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val red">2</div>
+    <div class="stat-lbl">No Signal</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val green" id="statDoc">0</div>
+    <div class="stat-lbl">Imported</div>
+  </div>
+</div>
+
+<!-- FILTER PILLS -->
+<div class="filter-wrap">
+  <div class="filter-row">
+    <div class="pill active" onclick="setFilter(this,'overview')">All</div>
+    <div class="pill" onclick="setFilter(this,'daily')"><span class="dot dot-orange"></span> Daily Table</div>
+    <div class="pill" onclick="setFilter(this,'csv')"><span class="dot dot-blue"></span> MyMaps CSV</div>
+    <div class="pill" onclick="setFilter(this,'phase')"><span class="dot dot-orange"></span> Phase Dive</div>
+    <div class="pill" onclick="setFilter(this,'permits')"><span class="dot dot-red"></span> Permits</div>
+    <div class="pill" onclick="setFilter(this,'food')"><span class="dot dot-green"></span> Food Guide</div>
+  </div>
+</div>
+
+<!-- SCROLL BODY -->
+<div class="scroll-body">
+
+  <!-- REFERENCE DOC -->
+  <div class="section-lbl">Reference Document</div>
+  <div class="upload-card" id="uploadCard">
+    <input type="file" id="docUpload" accept=".txt,.md,.csv"/>
+    <div class="upload-icon">📂</div>
+    <div class="upload-title">Upload Events &amp; Food Doc</div>
+    <div class="upload-sub">.txt · .md · .csv &nbsp;·&nbsp; tap to browse</div>
+    <div class="upload-status" id="uploadStatus"></div>
+  </div>
+
+  <!-- TRIP PARAMS -->
+  <div class="section-lbl">Trip Parameters</div>
+  <div class="param-card">
+    <div class="param-row double">
+      <div class="param-half">
+        <div class="param-lbl">Departure</div>
+        <input type="date" id="departDate" value="2026-06-01" oninput="syncHeader()"/>
+      </div>
+      <div class="param-half">
+        <div class="param-lbl">Duration</div>
+        <input type="number" id="duration" value="80" min="14" max="180" placeholder="days" oninput="syncHeader()"/>
+      </div>
+    </div>
+    <div class="param-row">
+      <div class="param-lbl">Start Location</div>
+      <input type="text" id="startLoc" value="Los Angeles, California, USA"/>
+    </div>
+    <div class="param-row">
+      <div class="param-lbl">End Location</div>
+      <input type="text" id="endLoc" value="Deadhorse (Prudhoe Bay), Alaska, USA"/>
+    </div>
+    <div class="param-row">
+      <div class="param-lbl">Special Instructions</div>
+      <textarea id="extraNotes" placeholder="e.g. Must be in Whitehorse by July 4 · Extra day at Denali…"></textarea>
     </div>
   </div>
 
-  <!-- Reference Doc Upload -->
-  <div class="section">
-    <div class="section-label">Reference Document</div>
-    <div class="upload-zone" id="uploadZone">
-      <input type="file" id="docUpload" accept=".txt,.md,.csv" />
-      <div class="upload-icon">📄</div>
-      <div class="upload-text"><strong>Upload your Events &amp; Locations + Food Doc</strong></div>
-      <div class="upload-text" style="font-size:12px;margin-top:4px;">Drag &amp; drop or click &middot; .txt or .md recommended</div>
-      <div class="upload-status" id="uploadStatus"></div>
-    </div>
-    <div class="tip">Upload your reference doc (fixed events, waypoints, food notes). If skipped, master prompt defaults are used.</div>
-  </div>
-
-  <!-- Trip Parameters -->
-  <div class="section">
-    <div class="section-label">Trip Parameters</div>
-    <div class="grid2" style="margin-bottom:1rem;">
-      <div>
-        <label>Departure Date</label>
-        <input type="date" id="departDate" value="2026-06-01" />
-      </div>
-      <div>
-        <label>Total Duration (days)</label>
-        <input type="number" id="duration" value="80" min="20" max="180" />
-      </div>
-    </div>
-    <div class="grid2" style="margin-bottom:1rem;">
-      <div>
-        <label>Start Location</label>
-        <input type="text" id="startLoc" value="Los Angeles, California, USA" />
-      </div>
-      <div>
-        <label>End Location</label>
-        <input type="text" id="endLoc" value="Deadhorse (Prudhoe Bay), Alaska, USA" />
-      </div>
-    </div>
-    <div>
-      <label>Special instructions / overrides (optional)</label>
-      <textarea id="extraNotes" placeholder="e.g. Must be in Whitehorse by July 4 · Avoid BC interior late June · Extra day at Denali..."></textarea>
-    </div>
-  </div>
-
-  <!-- Output Mode -->
-  <div class="section">
-    <div class="section-label">What to Generate</div>
-    <div class="mode-grid">
-      <div class="mode-card selected" data-mode="overview" onclick="selectMode(this)">
-        <div class="mode-icon">🗺️</div>
+  <!-- OUTPUT MODE -->
+  <div class="section-lbl">Output Mode</div>
+  <div class="mode-list">
+    <div class="mode-card selected" data-mode="overview" onclick="selectMode(this)">
+      <div class="mode-left-bar"></div>
+      <div class="mode-emoji">🗺️</div>
+      <div class="mode-info">
         <div class="mode-name">Route Summary</div>
-        <div class="mode-desc">High-level corridors + phase breakdown</div>
+        <div class="mode-desc">corridors · phases · food · logistics</div>
       </div>
-      <div class="mode-card" data-mode="daily" onclick="selectMode(this)">
-        <div class="mode-icon">📅</div>
+      <div class="mode-tag tag-orange">FULL</div>
+    </div>
+    <div class="mode-card" data-mode="daily" onclick="selectMode(this)">
+      <div class="mode-left-bar"></div>
+      <div class="mode-emoji">📅</div>
+      <div class="mode-info">
         <div class="mode-name">Daily Table</div>
-        <div class="mode-desc">Day-by-day itinerary with stops &amp; camping</div>
+        <div class="mode-desc">day-by-day · stops · overnight</div>
       </div>
-      <div class="mode-card" data-mode="csv" onclick="selectMode(this)">
-        <div class="mode-icon">📍</div>
+      <div class="mode-tag tag-orange">TABLE</div>
+    </div>
+    <div class="mode-card" data-mode="csv" onclick="selectMode(this)">
+      <div class="mode-left-bar"></div>
+      <div class="mode-emoji">📍</div>
+      <div class="mode-info">
         <div class="mode-name">Google MyMaps CSV</div>
-        <div class="mode-desc">Import-ready CSV for pinning on a map</div>
+        <div class="mode-desc">import-ready · lat/long · pins</div>
       </div>
-      <div class="mode-card" data-mode="phase" onclick="selectMode(this)">
-        <div class="mode-icon">🧭</div>
+      <div class="mode-tag tag-blue">CSV</div>
+    </div>
+    <div class="mode-card" data-mode="phase" onclick="selectMode(this)">
+      <div class="mode-left-bar"></div>
+      <div class="mode-emoji">🧭</div>
+      <div class="mode-info">
         <div class="mode-name">Phase Deep-Dive</div>
-        <div class="mode-desc">One phase with full food + permits detail</div>
+        <div class="mode-desc">one phase · food · camping · permits</div>
       </div>
-      <div class="mode-card" data-mode="permits" onclick="selectMode(this)">
-        <div class="mode-icon">🛂</div>
+      <div class="mode-tag tag-orange">PHASE</div>
+    </div>
+    <div class="mode-card" data-mode="permits" onclick="selectMode(this)">
+      <div class="mode-left-bar"></div>
+      <div class="mode-emoji">🛂</div>
+      <div class="mode-info">
         <div class="mode-name">Permits &amp; Crossings</div>
-        <div class="mode-desc">Border crossings, passes, reservations</div>
+        <div class="mode-desc">border docs · passes · reservations</div>
       </div>
-      <div class="mode-card" data-mode="food" onclick="selectMode(this)">
-        <div class="mode-icon">🍽️</div>
+      <div class="mode-tag tag-red">REQUIRED</div>
+    </div>
+    <div class="mode-card" data-mode="food" onclick="selectMode(this)">
+      <div class="mode-left-bar"></div>
+      <div class="mode-emoji">🍽️</div>
+      <div class="mode-info">
         <div class="mode-name">Food Guide</div>
-        <div class="mode-desc">Regional must-eats along the route</div>
+        <div class="mode-desc">regional must-eats · top picks ★</div>
       </div>
-    </div>
-    <div id="phaseInput" style="display:none;margin-top:1rem;">
-      <label>Which phase? (e.g. "British Columbia &amp; Yukon", "Day 30–45")</label>
-      <input type="text" id="phaseText" placeholder="e.g. British Columbia &amp; Yukon" />
+      <div class="mode-tag tag-green">EATS</div>
     </div>
   </div>
 
-  <button class="btn-run" id="runBtn" onclick="runPlanner()">
-    <span id="btnSpinner" style="display:none;" class="spinner"></span>
-    <span id="btnText">⚡ Generate Itinerary</span>
+  <div class="phase-extra" id="phaseExtra">
+    <div class="param-lbl">Which Phase?</div>
+    <input type="text" id="phaseText" placeholder="e.g. British Columbia &amp; Yukon"/>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- OUTPUT -->
+  <div class="output-wrap" id="outputWrap">
+    <div class="section-lbl" style="margin-top:20px;">Output</div>
+    <div class="output-hdr">
+      <div class="output-hdr-left">
+        <div class="output-dot"></div>
+        <div class="output-lbl" id="outputLbl">Route Summary</div>
+      </div>
+      <button class="copy-btn" onclick="copyOutput()">COPY</button>
+    </div>
+    <div class="output-body" id="outputBody"></div>
+  </div>
+
+  <div style="height:20px;"></div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <button class="btn-gen" id="genBtn" onclick="runPlanner()">
+    <span class="spinner" id="genSpinner" style="display:none;"></span>
+    <span id="genText">⚡ Generate Itinerary</span>
   </button>
-
-  <div id="errorBox" class="error-box" style="display:none;"></div>
-
-  <div id="outputSection" class="output-section" style="display:none;">
-    <div class="output-header">
-      <h2>📋 <span id="outputTitle">Output</span></h2>
-      <button class="copy-btn" onclick="copyOutput()">Copy all</button>
-    </div>
-    <div class="output-box" id="outputBox"></div>
-  </div>
-
+  <div class="btn-sub" id="genSub">6 stops · 2 no-signal zones flagged</div>
 </div>
 
 <script>
   let docContent = '';
   let selectedMode = 'overview';
 
+  // Sync header stats
+  function syncHeader() {
+    const d = document.getElementById('duration').value;
+    const dt = document.getElementById('departDate').value;
+    document.getElementById('statDays').textContent = d || '—';
+    document.getElementById('hdrDays').textContent = (d || '—') + ' days';
+    if (dt) {
+      const parts = dt.split('-');
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      document.getElementById('hdrDate').textContent = `${months[parseInt(parts[1])-1]} ${parseInt(parts[2])} ${parts[0]}`;
+    }
+  }
+
+  // File upload
   document.getElementById('docUpload').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const zone = document.getElementById('uploadZone');
     const status = document.getElementById('uploadStatus');
-    status.textContent = 'Reading file...';
+    const card = document.getElementById('uploadCard');
+    status.textContent = 'Reading…';
     try {
       const text = await file.text();
       docContent = text.slice(0, 14000);
-      zone.classList.add('has-file');
-      status.textContent = `✓ Loaded: ${file.name} (${(text.length / 1000).toFixed(1)}k chars)`;
-    } catch (err) {
-      status.textContent = 'Could not read file — upload a .txt or .md version';
-      docContent = '';
-    }
+      card.classList.add('has-file');
+      status.textContent = `✓ ${file.name} · ${(text.length/1000).toFixed(1)}k chars`;
+      document.getElementById('statDoc').textContent = '1';
+    } catch { status.textContent = 'Error — use .txt or .md'; docContent = ''; }
   });
 
+  // Filter pills sync to mode
+  function setFilter(el, mode) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    const card = document.querySelector(`[data-mode="${mode}"]`);
+    if (card) selectMode(card);
+    card && card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Mode selection
   function selectMode(el) {
     document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     selectedMode = el.dataset.mode;
-    document.getElementById('phaseInput').style.display = selectedMode === 'phase' ? 'block' : 'none';
+    document.getElementById('phaseExtra').classList.toggle('show', selectedMode === 'phase');
+    // sync pill
+    const modeMap = { overview:0, daily:1, csv:2, phase:3, permits:4, food:5 };
+    document.querySelectorAll('.pill').forEach((p,i) => {
+      p.classList.toggle('active', i === modeMap[selectedMode]);
+    });
+    // pill 0 = "All" = overview
+    if (selectedMode === 'overview') document.querySelectorAll('.pill')[0].classList.add('active');
   }
 
-  const MASTER_SYSTEM = `You are Claud v1.0 — an experienced overland and expedition planner.
+  const SYSTEM = `You are Claud v1.1 — an experienced overland and expedition planner.
+VEHICLE: 2004 Lexus GX470, well-equipped overland build. ~400mi fuel range. Capable on gravel/forest roads. Not for hardcore rock-crawling.
+GROUP: 1-2 travelers. Intermediate experience. Values solitude, photography, minimalist approach, local food.
+TRAVEL STYLE: On-road scenic overland. Easy-to-moderate difficulty, one advanced segment (Dalton Highway).
+CAMPING PRIORITY: 1) Dispersed/boondock 2) Paid campground 3) Hotel/motel.
+CAMPING FORMAT: Dispersed: [area; notes] | Campground: [name; services; phone; web] | Hotel: [name; reason].
+FOOD: Casual local, street food, non-chain restaurants, BBQ, regional specialties. Omnivorous.
+CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State assumptions. Mark fixed events ⚓. Mark fuel gaps ⚠.`;
 
-VEHICLE: 2004 Lexus GX470, well-equipped overland build (lift, armor, winch, fridge, dual battery/solar, ~400mi fuel range). Capable on gravel/forest roads. Not for hardcore rock-crawling.
-
-GROUP: 1–2 travelers. Intermediate overland experience. Values solitude, photography, minimalist approach, local food.
-
-TRAVEL STYLE: On-road scenic overland. Easy-to-moderate difficulty, one advanced segment (Dalton Highway). Dispersed camping preferred.
-
-CAMPING PRIORITY: 1) Dispersed/boondock, 2) Paid campground, 3) Hotel/motel.
-
-CAMPING FORMAT: Start with type label — Dispersed: [area; notes] | Campground: [name; services; phone; web] | Hotel: [name; reason].
-
-FOOD PREFERENCES: Casual local, street food, smaller non-chain restaurants, BBQ and regional specialties. Omnivorous.
-
-CONSTRAINTS: Prioritize safety and realism. Standard legal border crossings only. State any assumptions clearly.`;
-
-  const MODE_PROMPTS = {
-    overview: 'Generate (A) a high-level route summary with 6–8 bullet corridors, then (B) a phase breakdown with ~5 phases. For each phase include: day range, main goals, key logistics (fuel/services/remoteness), food highlights, and a brief Permits & Border Crossings subsection. Use markdown headers.',
-    daily: 'Generate a complete day-by-day itinerary table for the full trip. Markdown table columns: Day | Start | End | Approx Distance (mi) | Approx Drive Time | Key Stops / POIs | Avg Weather | Overnight. One row per day. Be concise per row.',
-    csv: `Output ONLY a CSV — no explanation, no markdown, no code fences. Header row:\nTitle,Latitude,Longitude,Weather,Description,Fees,Next Stop,Camping,Notes\n\nTitle format: "Day X | Location, STATE". One row per stop/day. Lat/Long as plain decimal numbers. Wrap any field with commas in double quotes.`,
-    permits: `Generate ONLY the Permits & Border Crossings section. Two markdown tables:\n1. Permits & Reservations: Name | What it's for | How to obtain | Recommended lead time | Notes\n2. Border Crossings: Crossing | Countries | Documents required | Hours/remoteness | Notes\nFocus on this specific route and time window.`,
-    food: 'Generate a regional food guide for the full route. Group by major hub city/region. For each hub: 2–5 spots (restaurant/cafe/bar/truck) with name, type, what to order, timing tips. End with a MUST-TRY SPECIALS section for iconic regional dishes.',
+  const PROMPTS = {
+    overview: 'Generate (A) a high-level route summary with 8-10 bullet corridors noting major waypoints and food cities, then (B) a phase breakdown with 5-8 phases. For each phase: day range, main goals, key logistics (fuel/remoteness), 1-3 food highlights, and a Permits & Border Crossings subsection. Use markdown headers. Mark fixed events ⚓. Mark fuel gaps ⚠.',
+    daily: 'Generate a complete day-by-day table. Markdown columns: Day | Date | Start | End | ~Miles | Drive Time | Key Stops / POIs | Overnight. One row per day. Mark fixed events ⚓. Mark fuel gaps ⚠.',
+    csv: 'Output ONLY a CSV. No explanation, no markdown, no fences.\nHeader: Title,Latitude,Longitude,Weather,Description,Fees,Next Stop,Camping,Notes\nTitle: "Day X | Location, STATE". One row per day. Lat/Long as plain decimals. Quote fields with commas.',
+    permits: "ONLY the Permits & Border Crossings section. Two markdown tables:\n1. Permits & Reservations: Name | What it's for | How to obtain | Lead time | Notes\n2. Border Crossings: Crossing | Countries | Documents | Hours/remoteness | Notes",
+    food: 'Regional food guide for the full route. Group by major hub. For each: 2-5 spots with name, type, what to order, timing. End with MUST-TRY SPECIALS. Mark top picks ★.',
   };
+
+  const LABELS = { overview:'Route Summary & Phases', daily:'Full Daily Itinerary', csv:'Google MyMaps CSV', phase:'Phase Deep-Dive', permits:'Permits & Crossings', food:'Regional Food Guide' };
 
   function buildPrompt() {
     const depart = document.getElementById('departDate').value;
@@ -286,71 +523,52 @@ CONSTRAINTS: Prioritize safety and realism. Standard legal border crossings only
     const end = document.getElementById('endLoc').value;
     const notes = document.getElementById('extraNotes').value.trim();
     const phaseText = document.getElementById('phaseText').value.trim();
-
-    let requestText = selectedMode === 'phase'
-      ? `Generate a deep-dive for the phase: "${phaseText || 'British Columbia & Yukon'}". Include: detailed day table, food recommendations (2–4 spots per major hub with what to order), camping details (dispersed spots with GPS area, campground names/phones/web), and a Permits & Border Crossings table.`
-      : MODE_PROMPTS[selectedMode];
-
-    let prompt = `TRIP PARAMETERS:\n- Departure: ${depart}\n- Duration: ${duration} days\n- Start: ${start}\n- End: ${end}\n`;
-    if (notes) prompt += `- Special instructions: ${notes}\n`;
-    prompt += '\n';
-    if (docContent) prompt += `REFERENCE DOCUMENT (events, waypoints, food notes):\n---\n${docContent}\n---\n\n`;
-    prompt += `REQUEST:\n${requestText}`;
-    return prompt;
+    const req = selectedMode === 'phase'
+      ? `Deep-dive for phase: "${phaseText || 'British Columbia & Yukon'}". Detailed day table, food (2-4 spots/hub), camping details, Permits & Border Crossings table.`
+      : PROMPTS[selectedMode];
+    let p = `TRIP:\n- Departure: ${depart}\n- Duration: ${duration} days\n- Start: ${start}\n- End: ${end}\n`;
+    if (notes) p += `- Instructions: ${notes}\n`;
+    p += '\n';
+    if (docContent) p += `REFERENCE DOC:\n---\n${docContent}\n---\n\n`;
+    p += `REQUEST:\n${req}`;
+    return p;
   }
 
-  const OUTPUT_TITLES = {
-    overview: 'Route Summary & Phase Breakdown',
-    daily: 'Full Daily Itinerary',
-    csv: 'Google MyMaps CSV',
-    phase: 'Phase Deep-Dive',
-    permits: 'Permits & Border Crossings',
-    food: 'Regional Food Guide',
-  };
-
   async function runPlanner() {
-    const btn = document.getElementById('runBtn');
-    const spinner = document.getElementById('btnSpinner');
-    const btnText = document.getElementById('btnText');
-    const outputSection = document.getElementById('outputSection');
-    const outputBox = document.getElementById('outputBox');
+    const btn = document.getElementById('genBtn');
+    const spinner = document.getElementById('genSpinner');
+    const btnText = document.getElementById('genText');
+    const outputWrap = document.getElementById('outputWrap');
+    const outputBody = document.getElementById('outputBody');
     const errorBox = document.getElementById('errorBox');
+    const sub = document.getElementById('genSub');
 
     errorBox.style.display = 'none';
-    outputSection.style.display = 'none';
-    outputBox.innerHTML = '';
+    outputWrap.style.display = 'none';
     btn.disabled = true;
     spinner.style.display = 'block';
-    btnText.textContent = 'Planning your route...';
-    document.getElementById('outputTitle').textContent = OUTPUT_TITLES[selectedMode] || 'Output';
+    btnText.textContent = 'Planning route…';
+    sub.textContent = 'Contacting Claude API…';
+    document.getElementById('outputLbl').textContent = LABELS[selectedMode] || 'Output';
 
     try {
       const res = await fetch('/api/plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system: MASTER_SYSTEM,
-          max_tokens: 4000,
-          messages: [{ role: 'user', content: buildPrompt() }],
-        }),
+        body: JSON.stringify({ system: SYSTEM, max_tokens: 4000, messages: [{ role:'user', content: buildPrompt() }] }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Server error');
-
       const raw = (data.content || []).map(b => b.text || '').join('');
-      outputSection.style.display = 'block';
-
-      if (selectedMode === 'csv') {
-        outputBox.classList.add('csv-mode');
-        outputBox.textContent = raw;
-      } else {
-        outputBox.classList.remove('csv-mode');
-        outputBox.innerHTML = renderMarkdown(raw);
-      }
-    } catch (err) {
+      outputWrap.style.display = 'block';
+      if (selectedMode === 'csv') { outputBody.classList.add('csv'); outputBody.textContent = raw; }
+      else { outputBody.classList.remove('csv'); outputBody.innerHTML = renderMD(raw); }
+      sub.textContent = 'Done · tap COPY to export';
+      setTimeout(() => outputWrap.scrollIntoView({ behavior:'smooth', block:'start' }), 120);
+    } catch(err) {
       errorBox.style.display = 'block';
-      errorBox.textContent = '⚠ ' + (err.message || 'Something went wrong. Check server logs.');
+      errorBox.textContent = '⚠ ' + (err.message || 'Error. Check server logs.');
+      sub.textContent = '6 stops · 2 no-signal zones flagged';
     } finally {
       btn.disabled = false;
       spinner.style.display = 'none';
@@ -358,62 +576,48 @@ CONSTRAINTS: Prioritize safety and realism. Standard legal border crossings only
     }
   }
 
-  function renderMarkdown(t) {
-    const e = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    let lines = t.split('\n');
-    let html = '';
-    let inTable = false;
-    let tableRows = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-      if (/^\|.+\|$/.test(line)) {
-        if (!inTable) { inTable = true; tableRows = []; }
-        tableRows.push(line);
-        continue;
-      }
-      if (inTable) {
-        html += flushTable(tableRows);
-        inTable = false; tableRows = [];
-      }
-      line = e(line);
-      if (/^### /.test(line)) { html += `<h3>${line.slice(4)}</h3>`; continue; }
-      if (/^## /.test(line)) { html += `<h2>${line.slice(3)}</h2>`; continue; }
-      if (/^# /.test(line)) { html += `<h1>${line.slice(2)}</h1>`; continue; }
-      if (/^- /.test(line)) { html += `<li>${fmt(line.slice(2))}</li>`; continue; }
-      if (/^\d+\. /.test(line)) { html += `<li>${fmt(line.replace(/^\d+\. /, ''))}</li>`; continue; }
-      if (line.trim() === '') { html += '<br>'; continue; }
+  function renderMD(t) {
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const fmt = s => s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>');
+    let lines = t.split('\n'), html = '', inTable = false, rows = [];
+    for (let line of lines) {
+      if (/^\|.+\|$/.test(line)) { if (!inTable) { inTable = true; rows = []; } rows.push(line); continue; }
+      if (inTable) { html += flushTbl(rows); inTable = false; rows = []; }
+      line = esc(line);
+      if (/^### /.test(line)) { html += `<h3>${fmt(line.slice(4))}</h3>`; continue; }
+      if (/^## /.test(line)) { html += `<h2>${fmt(line.slice(3))}</h2>`; continue; }
+      if (/^# /.test(line)) { html += `<h1>${fmt(line.slice(2))}</h1>`; continue; }
+      if (/^---+$/.test(line.trim())) { html += '<hr>'; continue; }
+      if (/^[-*] /.test(line)) { html += `<li>${fmt(line.slice(2))}</li>`; continue; }
+      if (/^\d+\. /.test(line)) { html += `<li>${fmt(line.replace(/^\d+\. /,''))}</li>`; continue; }
+      if (!line.trim()) { html += '<br>'; continue; }
       html += `<p>${fmt(line)}</p>`;
     }
-    if (inTable) html += flushTable(tableRows);
+    if (inTable) html += flushTbl(rows);
     return html;
   }
 
-  function fmt(s) {
-    return s
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/`(.+?)`/g, '<code>$1</code>');
-  }
-
-  function flushTable(rows) {
+  function flushTbl(rows) {
     const parse = r => r.slice(1,-1).split('|').map(c => c.trim());
-    const filtered = rows.filter(r => !/^\|[-| :]+\|$/.test(r));
-    if (filtered.length === 0) return '';
-    const [head, ...body] = filtered;
-    const hcells = parse(head).map(c => `<th>${fmt(c)}</th>`).join('');
-    const brows = body.map(r => '<tr>' + parse(r).map(c => `<td>${fmt(c)}</td>`).join('') + '</tr>').join('');
-    return `<table><thead><tr>${hcells}</tr></thead><tbody>${brows}</tbody></table>`;
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const fmt = s => s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    const f = rows.filter(r => !/^\|[-| :]+\|$/.test(r));
+    if (!f.length) return '';
+    const [head, ...body] = f;
+    const ths = parse(head).map(c => `<th>${fmt(esc(c))}</th>`).join('');
+    const trs = body.map(r => '<tr>'+parse(r).map(c=>`<td>${fmt(esc(c))}</td>`).join('')+'</tr>').join('');
+    return `<div class="table-wrap"><table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
   }
 
   function copyOutput() {
-    const text = document.getElementById('outputBox').innerText;
-    navigator.clipboard.writeText(text).then(() => {
+    navigator.clipboard.writeText(document.getElementById('outputBody').innerText || '').then(() => {
       const btn = document.querySelector('.copy-btn');
-      btn.textContent = 'Copied!';
-      setTimeout(() => btn.textContent = 'Copy all', 2000);
+      btn.textContent = 'COPIED!';
+      setTimeout(() => btn.textContent = 'COPY', 2000);
     });
   }
+
+  syncHeader();
 </script>
 </body>
 </html>
