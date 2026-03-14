@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claud v1.0 — Overland Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sand: #C9B99A;
+      --rust: #B5522B;
+      --pine: #2E4A3E;
+      --fog: #8A9B8E;
+      --bone: #EDE8DF;
+      --ink: #1C2420;
+      --warm-bg: #F5F0E8;
+      --card-bg: #FDFAF5;
+      --border: rgba(44,36,28,0.12);
+    }
+
+    body {
+      background: var(--warm-bg);
+      font-family: 'Barlow', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .app { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+    /* Header */
+    .header { display: flex; align-items: flex-end; gap: 1.5rem; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    .header-badge { background: var(--rust); color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 2px; padding: 4px 10px; border-radius: 3px; text-transform: uppercase; margin-bottom: 6px; display: inline-block; }
+    .header h1 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 34px; line-height: 1; color: var(--ink); }
+    .header p { font-size: 14px; color: #5A6B65; margin-top: 5px; font-weight: 300; }
+
+    /* Sections */
+    .section { background: var(--card-bg); border: 0.5px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
+    .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--fog); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .section-label::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
+
+    /* Form */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    label { font-size: 13px; color: #5A6B65; display: block; margin-bottom: 5px; }
+    input[type=text], input[type=date], input[type=number], select, textarea {
+      width: 100%; font-family: 'Barlow', sans-serif; font-size: 14px; color: var(--ink);
+      background: var(--warm-bg); border: 0.5px solid rgba(44,36,28,0.2);
+      border-radius: 6px; padding: 9px 12px; outline: none; transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--rust); }
+    textarea { resize: vertical; min-height: 80px; }
+    select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235A6B65'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+    /* Upload */
+    .upload-zone { border: 1.5px dashed var(--sand); border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden; }
+    .upload-zone:hover { border-color: var(--rust); background: rgba(181,82,43,0.04); }
+    .upload-zone.has-file { border-color: var(--pine); background: rgba(46,74,62,0.05); }
+    .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { font-size: 26px; margin-bottom: 8px; }
+    .upload-text { font-size: 14px; color: #5A6B65; }
+    .upload-text strong { color: var(--rust); }
+    .upload-status { font-size: 12px; color: var(--pine); margin-top: 6px; font-weight: 500; }
+
+    /* Mode cards */
+    .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .mode-card { border: 0.5px solid var(--border); border-radius: 8px; padding: 14px 12px; cursor: pointer; transition: all 0.15s; background: var(--warm-bg); text-align: left; }
+    .mode-card:hover { border-color: var(--sand); }
+    .mode-card.selected { border-color: var(--rust); background: rgba(181,82,43,0.06); }
+    .mode-card .mode-icon { font-size: 18px; margin-bottom: 6px; }
+    .mode-card .mode-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink); }
+    .mode-card .mode-desc { font-size: 11px; color: #5A6B65; margin-top: 3px; line-height: 1.4; }
+
+    /* Run button */
+    .btn-run { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: var(--rust); color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 1px; border: none; border-radius: 8px; padding: 15px; cursor: pointer; transition: background 0.15s; margin-top: 1.25rem; }
+    .btn-run:hover:not(:disabled) { background: #9E4422; }
+    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Output */
+    .output-section { margin-top: 1.75rem; }
+    .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .output-header h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; }
+    .copy-btn { font-size: 13px; color: #5A6B65; background: var(--card-bg); border: 0.5px solid var(--border); border-radius: 6px; padding: 6px 14px; cursor: pointer; font-family: 'Barlow', sans-serif; transition: all 0.15s; }
+    .copy-btn:hover { border-color: var(--sand); color: var(--ink); }
+
+    .output-box {
+      background: var(--card-bg); border: 0.5px solid var(--border); border-radius: 10px;
+      padding: 1.75rem; font-size: 14px; line-height: 1.75; word-break: break-word;
+      font-family: 'Barlow', sans-serif; color: var(--ink); max-height: 72vh; overflow-y: auto;
+    }
+    .output-box.csv-mode { white-space: pre; font-family: monospace; font-size: 12.5px; }
+    .output-box h1, .output-box h2, .output-box h3 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; margin: 1.2rem 0 0.5rem; }
+    .output-box h1 { font-size: 22px; }
+    .output-box h2 { font-size: 18px; color: var(--rust); }
+    .output-box h3 { font-size: 15px; color: var(--pine); }
+    .output-box table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 1rem 0; }
+    .output-box th { background: var(--warm-bg); font-weight: 600; text-align: left; padding: 8px 10px; border: 0.5px solid var(--border); font-size: 12px; }
+    .output-box td { padding: 7px 10px; border: 0.5px solid var(--border); vertical-align: top; }
+    .output-box tr:hover td { background: rgba(201,185,154,0.1); }
+    .output-box code { background: var(--warm-bg); padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
+    .output-box ul, .output-box ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+    .output-box li { margin-bottom: 3px; }
+    .output-box p { margin-bottom: 0.6rem; }
+
+    .error-box { background: rgba(181,82,43,0.08); border: 0.5px solid rgba(181,82,43,0.3); border-radius: 8px; padding: 1rem 1.25rem; color: var(--rust); font-size: 14px; margin-top: 1rem; }
+    .tip { font-size: 12px; color: #7A8B85; background: rgba(138,155,142,0.1); border-radius: 6px; padding: 8px 12px; margin-top: 8px; line-height: 1.5; }
+
+    @media (max-width: 600px) {
+      .grid2 { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr 1fr; }
+      .header h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div>
+      <div class="header-badge">Claud v1.0</div>
+      <h1>Overlanding Trip Planner</h1>
+      <p>AI-powered expedition planning &middot; GX470 &middot; LA &rarr; Deadhorse</p>
+    </div>
+  </div>
+
+  <!-- Reference Doc Upload -->
+  <div class="section">
+    <div class="section-label">Reference Document</div>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="docUpload" accept=".txt,.md,.csv" />
+      <div class="upload-icon">📄</div>
+      <div class="upload-text"><strong>Upload your Events &amp; Locations + Food Doc</strong></div>
+      <div class="upload-text" style="font-size:12px;margin-top:4px;">Drag &amp; drop or click &middot; .txt or .md recommended</div>
+      <div class="upload-status" id="uploadStatus"></div>
+    </div>
+    <div class="tip">Upload your reference doc (fixed events, waypoints, food notes). If skipped, master prompt defaults are used.</div>
+  </div>
+
+  <!-- Trip Parameters -->
+  <div class="section">
+    <div class="section-label">Trip Parameters</div>
+    <div class="grid2" style="margin-bottom:1rem;">
+      <div>
+        <label>Departure Date</label>
+        <input type="date" id="departDate" value="2026-06-01" />
+      </div>
+      <div>
+        <label>Total Duration (days)</label>
+        <input type="number" id="duration" value="80" min="20" max="180" />
+      </div>
+    </div>
+    <div class="grid2" style="margin-bottom:1rem;">
+      <div>
+        <label>Start Location</label>
+        <input type="text" id="startLoc" value="Los Angeles, California, USA" />
+      </div>
+      <div>
+        <label>End Location</label>
+        <input type="text" id="endLoc" value="Deadhorse (Prudhoe Bay), Alaska, USA" />
+      </div>
+    </div>
+    <div>
+      <label>Special instructions / overrides (optional)</label>
+      <textarea id="extraNotes" placeholder="e.g. Must be in Whitehorse by July 4 · Avoid BC interior late June · Extra day at Denali..."></textarea>
+    </div>
+  </div>
+
+  <!-- Output Mode -->
+  <div class="section">
+    <div class="section-label">What to Generate</div>
+    <div class="mode-grid">
+      <div class="mode-card selected" data-mode="overview" onclick="selectMode(this)">
+        <div class="mode-icon">🗺️</div>
+        <div class="mode-name">Route Summary</div>
+        <div class="mode-desc">High-level corridors + phase breakdown</div>
+      </div>
+      <div class="mode-card" data-mode="daily" onclick="selectMode(this)">
+        <div class="mode-icon">📅</div>
+        <div class="mode-name">Daily Table</div>
+        <div class="mode-desc">Day-by-day itinerary with stops &amp; camping</div>
+      </div>
+      <div class="mode-card" data-mode="csv" onclick="selectMode(this)">
+        <div class="mode-icon">📍</div>
+        <div class="mode-name">Google MyMaps CSV</div>
+        <div class="mode-desc">Import-ready CSV for pinning on a map</div>
+      </div>
+      <div class="mode-card" data-mode="phase" onclick="selectMode(this)">
+        <div class="mode-icon">🧭</div>
+        <div class="mode-name">Phase Deep-Dive</div>
+        <div class="mode-desc">One phase with full food + permits detail</div>
+      </div>
+      <div class="mode-card" data-mode="permits" onclick="selectMode(this)">
+        <div class="mode-icon">🛂</div>
+        <div class="mode-name">Permits &amp; Crossings</div>
+        <div class="mode-desc">Border crossings, passes, reservations</div>
+      </div>
+      <div class="mode-card" data-mode="food" onclick="selectMode(this)">
+        <div class="mode-icon">🍽️</div>
+        <div class="mode-name">Food Guide</div>
+        <div class="mode-desc">Regional must-eats along the route</div>
+      </div>
+    </div>
+    <div id="phaseInput" style="display:none;margin-top:1rem;">
+      <label>Which phase? (e.g. "British Columbia &amp; Yukon", "Day 30–45")</label>
+      <input type="text" id="phaseText" placeholder="e.g. British Columbia &amp; Yukon" />
+    </div>
+  </div>
+
+  <button class="btn-run" id="runBtn" onclick="runPlanner()">
+    <span id="btnSpinner" style="display:none;" class="spinner"></span>
+    <span id="btnText">⚡ Generate Itinerary</span>
+  </button>
+
+  <div id="errorBox" class="error-box" style="display:none;"></div>
+
+  <div id="outputSection" class="output-section" style="display:none;">
+    <div class="output-header">
+      <h2>📋 <span id="outputTitle">Output</span></h2>
+      <button class="copy-btn" onclick="copyOutput()">Copy all</button>
+    </div>
+    <div class="output-box" id="outputBox"></div>
+  </div>
+
+</div>
+
+<script>
+  let docContent = '';
+  let selectedMode = 'overview';
+
+  document.getElementById('docUpload').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const zone = document.getElementById('uploadZone');
+    const status = document.getElementById('uploadStatus');
+    status.textContent = 'Reading file...';
+    try {
+      const text = await file.text();
+      docContent = text.slice(0, 14000);
+      zone.classList.add('has-file');
+      status.textContent = `✓ Loaded: ${file.name} (${(text.length / 1000).toFixed(1)}k chars)`;
+    } catch (err) {
+      status.textContent = 'Could not read file — upload a .txt or .md version';
+      docContent = '';
+    }
+  });
+
+  function selectMode(el) {
+    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedMode = el.dataset.mode;
+    document.getElementById('phaseInput').style.display = selectedMode === 'phase' ? 'block' : 'none';
+  }
+
+  const MASTER_SYSTEM = `You are Claud v1.0 — an experienced overland and expedition planner.
+
+VEHICLE: 2004 Lexus GX470, well-equipped overland build (lift, armor, winch, fridge, dual battery/solar, ~400mi fuel range). Capable on gravel/forest roads. Not for hardcore rock-crawling.
+
+GROUP: 1–2 travelers. Intermediate overland experience. Values solitude, photography, minimalist approach, local food.
+
+TRAVEL STYLE: On-road scenic overland. Easy-to-moderate difficulty, one advanced segment (Dalton Highway). Dispersed camping preferred.
+
+CAMPING PRIORITY: 1) Dispersed/boondock, 2) Paid campground, 3) Hotel/motel.
+
+CAMPING FORMAT: Start with type label — Dispersed: [area; notes] | Campground: [name; services; phone; web] | Hotel: [name; reason].
+
+FOOD PREFERENCES: Casual local, street food, smaller non-chain restaurants, BBQ and regional specialties. Omnivorous.
+
+CONSTRAINTS: Prioritize safety and realism. Standard legal border crossings only. State any assumptions clearly.`;
+
+  const MODE_PROMPTS = {
+    overview: 'Generate (A) a high-level route summary with 6–8 bullet corridors, then (B) a phase breakdown with ~5 phases. For each phase include: day range, main goals, key logistics (fuel/services/remoteness), food highlights, and a brief Permits & Border Crossings subsection. Use markdown headers.',
+    daily: 'Generate a complete day-by-day itinerary table for the full trip. Markdown table columns: Day | Start | End | Approx Distance (mi) | Approx Drive Time | Key Stops / POIs | Avg Weather | Overnight. One row per day. Be concise per row.',
+    csv: `Output ONLY a CSV — no explanation, no markdown, no code fences. Header row:\nTitle,Latitude,Longitude,Weather,Description,Fees,Next Stop,Camping,Notes\n\nTitle format: "Day X | Location, STATE". One row per stop/day. Lat/Long as plain decimal numbers. Wrap any field with commas in double quotes.`,
+    permits: `Generate ONLY the Permits & Border Crossings section. Two markdown tables:\n1. Permits & Reservations: Name | What it's for | How to obtain | Recommended lead time | Notes\n2. Border Crossings: Crossing | Countries | Documents required | Hours/remoteness | Notes\nFocus on this specific route and time window.`,
+    food: 'Generate a regional food guide for the full route. Group by major hub city/region. For each hub: 2–5 spots (restaurant/cafe/bar/truck) with name, type, what to order, timing tips. End with a MUST-TRY SPECIALS section for iconic regional dishes.',
+  };
+
+  function buildPrompt() {
+    const depart = document.getElementById('departDate').value;
+    const duration = document.getElementById('duration').value;
+    const start = document.getElementById('startLoc').value;
+    const end = document.getElementById('endLoc').value;
+    const notes = document.getElementById('extraNotes').value.trim();
+    const phaseText = document.getElementById('phaseText').value.trim();
+
+    let requestText = selectedMode === 'phase'
+      ? `Generate a deep-dive for the phase: "${phaseText || 'British Columbia & Yukon'}". Include: detailed day table, food recommendations (2–4 spots per major hub with what to order), camping details (dispersed spots with GPS area, campground names/phones/web), and a Permits & Border Crossings table.`
+      : MODE_PROMPTS[selectedMode];
+
+    let prompt = `TRIP PARAMETERS:\n- Departure: ${depart}\n- Duration: ${duration} days\n- Start: ${start}\n- End: ${end}\n`;
+    if (notes) prompt += `- Special instructions: ${notes}\n`;
+    prompt += '\n';
+    if (docContent) prompt += `REFERENCE DOCUMENT (events, waypoints, food notes):\n---\n${docContent}\n---\n\n`;
+    prompt += `REQUEST:\n${requestText}`;
+    return prompt;
+  }
+
+  const OUTPUT_TITLES = {
+    overview: 'Route Summary & Phase Breakdown',
+    daily: 'Full Daily Itinerary',
+    csv: 'Google MyMaps CSV',
+    phase: 'Phase Deep-Dive',
+    permits: 'Permits & Border Crossings',
+    food: 'Regional Food Guide',
+  };
+
+  async function runPlanner() {
+    const btn = document.getElementById('runBtn');
+    const spinner = document.getElementById('btnSpinner');
+    const btnText = document.getElementById('btnText');
+    const outputSection = document.getElementById('outputSection');
+    const outputBox = document.getElementById('outputBox');
+    const errorBox = document.getElementById('errorBox');
+
+    errorBox.style.display = 'none';
+    outputSection.style.display = 'none';
+    outputBox.innerHTML = '';
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    btnText.textContent = 'Planning your route...';
+    document.getElementById('outputTitle').textContent = OUTPUT_TITLES[selectedMode] || 'Output';
+
+    try {
+      const res = await fetch('/api/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system: MASTER_SYSTEM,
+          max_tokens: 4000,
+          messages: [{ role: 'user', content: buildPrompt() }],
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Server error');
+
+      const raw = (data.content || []).map(b => b.text || '').join('');
+      outputSection.style.display = 'block';
+
+      if (selectedMode === 'csv') {
+        outputBox.classList.add('csv-mode');
+        outputBox.textContent = raw;
+      } else {
+        outputBox.classList.remove('csv-mode');
+        outputBox.innerHTML = renderMarkdown(raw);
+      }
+    } catch (err) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = '⚠ ' + (err.message || 'Something went wrong. Check server logs.');
+    } finally {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      btnText.textContent = '⚡ Generate Itinerary';
+    }
+  }
+
+  function renderMarkdown(t) {
+    const e = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let lines = t.split('\n');
+    let html = '';
+    let inTable = false;
+    let tableRows = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      if (/^\|.+\|$/.test(line)) {
+        if (!inTable) { inTable = true; tableRows = []; }
+        tableRows.push(line);
+        continue;
+      }
+      if (inTable) {
+        html += flushTable(tableRows);
+        inTable = false; tableRows = [];
+      }
+      line = e(line);
+      if (/^### /.test(line)) { html += `<h3>${line.slice(4)}</h3>`; continue; }
+      if (/^## /.test(line)) { html += `<h2>${line.slice(3)}</h2>`; continue; }
+      if (/^# /.test(line)) { html += `<h1>${line.slice(2)}</h1>`; continue; }
+      if (/^- /.test(line)) { html += `<li>${fmt(line.slice(2))}</li>`; continue; }
+      if (/^\d+\. /.test(line)) { html += `<li>${fmt(line.replace(/^\d+\. /, ''))}</li>`; continue; }
+      if (line.trim() === '') { html += '<br>'; continue; }
+      html += `<p>${fmt(line)}</p>`;
+    }
+    if (inTable) html += flushTable(tableRows);
+    return html;
+  }
+
+  function fmt(s) {
+    return s
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code>$1</code>');
+  }
+
+  function flushTable(rows) {
+    const parse = r => r.slice(1,-1).split('|').map(c => c.trim());
+    const filtered = rows.filter(r => !/^\|[-| :]+\|$/.test(r));
+    if (filtered.length === 0) return '';
+    const [head, ...body] = filtered;
+    const hcells = parse(head).map(c => `<th>${fmt(c)}</th>`).join('');
+    const brows = body.map(r => '<tr>' + parse(r).map(c => `<td>${fmt(c)}</td>`).join('') + '</tr>').join('');
+    return `<table><thead><tr>${hcells}</tr></thead><tbody>${brows}</tbody></table>`;
+  }
+
+  function copyOutput() {
+    const text = document.getElementById('outputBox').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy all', 2000);
+    });
+  }
+</script>
+</body>
+</html>
