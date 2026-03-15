@@ -267,6 +267,67 @@
     .modal-gdrive-status.ok   { color: var(--green); }
     .modal-gdrive-status.err  { color: var(--red); }
     .modal-gdrive-status.info { color: var(--text3); }
+    /* ── HOME EMPTY STATE ── */
+    .home-empty { text-align: center; padding: 48px 20px 24px; }
+    .home-empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .home-empty-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .home-empty-sub { font-size: 12px; color: var(--text2); font-family: 'JetBrains Mono', monospace; line-height: 1.6; margin-bottom: 20px; }
+    .home-empty-btn { display: block; width: 100%; max-width: 260px; margin: 0 auto 10px; background: var(--orange); color: #fff; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; border: none; border-radius: 10px; padding: 13px; cursor: pointer; }
+    .home-empty-btn.secondary { background: var(--sf2); border: 1px solid var(--border2); color: var(--text2); }
+
+    /* ── DAY CARDS ── */
+    .day-card {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 8px;
+      cursor: pointer; transition: border-color 0.15s, background 0.12s;
+      display: flex; align-items: center; gap: 14px; position: relative;
+      overflow: hidden;
+    }
+    .day-card:active { background: var(--sf2); }
+    .day-card.anchor { border-color: rgba(192,57,43,0.4); }
+    .day-card.anchor::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--red); border-radius: 12px 0 0 12px; }
+    .day-num-badge { width: 36px; height: 36px; border-radius: 50%; background: var(--sf3); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--text2); flex-shrink: 0; }
+    .day-card.anchor .day-num-badge { background: rgba(192,57,43,0.15); color: var(--red); }
+    .day-card-info { flex: 1; min-width: 0; }
+    .day-card-title { font-size: 15px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+    .day-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); display: flex; gap: 8px; flex-wrap: wrap; }
+    .day-card-meta span { white-space: nowrap; }
+    .day-card-meta .miles { color: var(--orange2); }
+    .day-card-note { font-size: 12px; color: var(--text2); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .day-card-chevron { color: var(--text3); font-size: 16px; flex-shrink: 0; }
+
+    /* ── DAY DRAWER ── */
+    .drawer-overlay {
+      display: none; position: fixed; inset: 0; z-index: 400;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+      align-items: flex-end; justify-content: center;
+    }
+    .drawer-overlay.open { display: flex; }
+    .drawer-box {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 20px 20px 0 0; width: 100%; max-width: 600px;
+      max-height: 85vh; display: flex; flex-direction: column;
+      animation: slideUp 0.28s cubic-bezier(0.32,0.72,0,1);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .drawer-handle { width: 36px; height: 4px; background: var(--sf3); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+    .drawer-hdr { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+    .drawer-day-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--orange); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+    .drawer-title { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 3px; }
+    .drawer-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); }
+    .drawer-dive-btn { background: var(--orange); color: #fff; border: none; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; padding: 8px 14px; border-radius: 20px; cursor: pointer; white-space: nowrap; flex-shrink: 0; margin-top: 4px; }
+    .drawer-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 18px 24px; flex: 1; }
+
+    /* Drawer row items */
+    .drawer-section { margin-bottom: 16px; }
+    .drawer-section-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .drawer-section-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .drawer-detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+    .drawer-detail-row:last-child { border-bottom: none; }
+    .drawer-detail-lbl { font-size: 12px; color: var(--text3); flex-shrink: 0; }
+    .drawer-detail-val { font-size: 13px; color: var(--text); text-align: right; font-weight: 500; }
+    .drawer-notes-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .drawer-anchor-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(192,57,43,0.12); color: var(--red); border: 1px solid rgba(192,57,43,0.3); font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-bottom: 12px; letter-spacing: 0.5px; }
   </style>
 </head>
 <body>
@@ -447,63 +508,27 @@
 
     <!-- HOME -->
     <div class="screen active" id="screen-home">
-      <div class="sec-lbl">Reference Document</div>
-      <div class="upload-card" id="uploadCard">
-        <input type="file" id="docUpload" accept=".docx,.txt,.md,.csv"/>
-        <div class="upload-icon">📂</div>
-        <div class="upload-title">Upload Reference Doc</div>
-        <div class="upload-hint">.docx · .txt · .md &nbsp;·&nbsp; tap to browse</div>
-        <div class="upload-status" id="uploadStatus"></div>
+
+      <div class="home-empty" id="homeEmpty">
+        <div class="home-empty-icon">🗺️</div>
+        <div class="home-empty-title">No itinerary loaded</div>
+        <div class="home-empty-sub">Upload a reference doc or create a trip to see your day-by-day plan here</div>
+        <button class="home-empty-btn" onclick="goToByName('create')">+ New Trip</button>
+        <button class="home-empty-btn secondary" onclick="openUploadModal()">📂 Upload Doc</button>
       </div>
 
-      <div class="sec-lbl">Trip Parameters</div>
-      <div class="card">
-        <div class="card-row double">
-          <div class="card-half">
-            <div class="field-lbl">Departure</div>
-            <input type="text" id="departDate" placeholder="Enter date" oninput="syncHeader()"/>
-          </div>
-          <div class="card-half">
-            <div class="field-lbl">Duration</div>
-            <input type="number" id="duration" min="1" max="365" placeholder="Days" oninput="syncHeader()"/>
-          </div>
-        </div>
-        <div class="card-row">
-          <div class="field-lbl">Start Location</div>
-          <input type="text" id="startLoc" placeholder="Enter start location" oninput="syncHeader()"/>
-        </div>
-        <div class="card-row">
-          <div class="field-lbl">End Location</div>
-          <input type="text" id="endLoc" placeholder="Enter end location" oninput="syncHeader()"/>
-        </div>
-        <div class="card-row">
-          <div class="field-lbl">Special Instructions</div>
-          <textarea id="extraNotes" placeholder="e.g. Must be in Whitehorse by July 4 · Extra day at Denali…"></textarea>
-        </div>
+      <div id="homeDayCards" style="display:none;">
+        <div class="sec-lbl" id="homeTripLabel">Trip Overview</div>
+        <div id="dayCardsList"></div>
       </div>
 
-      <div class="sec-lbl">Quick Actions</div>
-      <div class="card">
-        <div class="info-row" onclick="goToByName('daily')" style="cursor:pointer;">
-          <div class="info-lbl">📅 &nbsp;Daily Table</div>
-          <div style="color:var(--text3);font-size:18px;">›</div>
-        </div>
-        <div class="info-row" onclick="goToByName('csv')" style="cursor:pointer;">
-          <div class="info-lbl">📍 &nbsp;MyMaps CSV</div>
-          <div style="color:var(--text3);font-size:18px;">›</div>
-        </div>
-        <div class="info-row" onclick="goToByName('daydive')" style="cursor:pointer;">
-          <div class="info-lbl">🔍 &nbsp;Day Deep-Dive</div>
-          <div style="color:var(--text3);font-size:18px;">›</div>
-        </div>
-        <div class="info-row" onclick="goToByName('permits')" style="cursor:pointer;">
-          <div class="info-lbl">🛂 &nbsp;Permits &amp; Crossings</div>
-          <div style="color:var(--text3);font-size:18px;">›</div>
-        </div>
-        <div class="info-row" onclick="goToByName('food')" style="cursor:pointer;">
-          <div class="info-lbl">🍽️ &nbsp;Food Guide</div>
-          <div style="color:var(--text3);font-size:18px;">›</div>
-        </div>
+      <!-- Hidden fields still needed for other screens -->
+      <div style="display:none;">
+        <input type="text" id="departDate" oninput="syncHeader()"/>
+        <input type="number" id="duration" oninput="syncHeader()"/>
+        <input type="text" id="startLoc" oninput="syncHeader()"/>
+        <input type="text" id="endLoc" oninput="syncHeader()"/>
+        <textarea id="extraNotes"></textarea>
       </div>
     </div>
 
@@ -624,6 +649,22 @@
   </div><!-- /screens -->
 </div><!-- /app-shell -->
 
+<!-- DAY DETAIL DRAWER -->
+<div class="drawer-overlay" id="dayDrawer" onclick="closeDrawer(event)">
+  <div class="drawer-box" id="drawerBox">
+    <div class="drawer-handle"></div>
+    <div class="drawer-hdr">
+      <div>
+        <div class="drawer-day-label" id="drawerDayLabel">Day 1</div>
+        <div class="drawer-title" id="drawerTitle">Location</div>
+        <div class="drawer-date" id="drawerDate">—</div>
+      </div>
+      <button class="drawer-dive-btn" id="drawerDiveBtn" onclick="diveFromDrawer()">Deep-Dive →</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </div>
+</div>
+
 <!-- UPLOAD REFERENCE MODAL -->
 <div class="modal-overlay" id="uploadModal" onclick="closeUploadModal(event)">
   <div class="modal-box">
@@ -690,7 +731,7 @@
   let currentScreen = 'home';
 
   const SCREEN_LABELS = {
-    home:    '⚡ Generate Route Summary',
+    home:    tripDays.length ? '⚡ Refresh Day Cards' : '+ Create New Trip',
     create:  '⚡ Generate from This Trip',
     daily:   '⚡ Generate Daily Table',
     csv:     '⚡ Generate MyMaps CSV',
@@ -834,7 +875,138 @@
     tabs[names.indexOf(name)]?.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
   }
 
-  // ── HEADER SYNC ──
+  // ── DAY CARDS & DRAWER ──
+  let tripDays = [];   // array of day objects parsed from doc or generated output
+  let drawerDayIndex = 0;
+
+  // Parse Section 04 Full Itinerary from doc text into day objects
+  function parseDaysFromDoc(text) {
+    const days = [];
+    // Match table rows like: | 1 | 4/21/26 | Las Vegas, NV | notes |
+    const rows = text.match(/\|\s*\d+\s*\|[^\n]+/g) || [];
+    rows.forEach(row => {
+      const cols = row.split('|').map(c => c.trim()).filter(Boolean);
+      if (cols.length >= 2) {
+        const dayNum = parseInt(cols[0]);
+        if (!dayNum || dayNum > 365) return;
+        days.push({
+          day:      dayNum,
+          date:     cols[1] || '',
+          location: cols[2] || '',
+          notes:    cols[3] || '',
+          miles:    '',
+          drive:    '',
+          overnight:'',
+          isAnchor: false,
+        });
+      }
+    });
+    return days;
+  }
+
+  // Parse fixed events from doc to mark anchor days
+  function parseAnchorsFromDoc(text) {
+    const anchors = [];
+    const rows = text.match(/\d{1,2}\/\d{1,2}\/\d{2,4}\s*\|[^\n]+/g) || [];
+    rows.forEach(row => {
+      const cols = row.split('|').map(c => c.trim());
+      if (cols[0]) anchors.push(cols[0].trim());
+    });
+    return anchors;
+  }
+
+  function buildDayCards(days) {
+    tripDays = days;
+    const list = document.getElementById('dayCardsList');
+    const empty = document.getElementById('homeEmpty');
+    const cardsWrap = document.getElementById('homeDayCards');
+    if (!days.length) { empty.style.display = ''; cardsWrap.style.display = 'none'; return; }
+    empty.style.display = 'none';
+    cardsWrap.style.display = '';
+    const start = document.getElementById('startLoc').value || document.getElementById('c-startLoc').value;
+    const end = document.getElementById('endLoc').value || document.getElementById('c-endLoc').value;
+    if (start && end) document.getElementById('homeTripLabel').textContent = `${start} → ${end}`;
+    list.innerHTML = days.map((d, i) => `
+      <div class="day-card${d.isAnchor ? ' anchor' : ''}" onclick="openDrawer(${i})">
+        <div class="day-num-badge">${d.isAnchor ? '⚓' : d.day}</div>
+        <div class="day-card-info">
+          <div class="day-card-title">${d.location || 'Day ' + d.day}</div>
+          <div class="day-card-meta">
+            <span>${d.date || '—'}</span>
+            ${d.miles ? `<span class="miles">~${d.miles} mi</span>` : ''}
+            ${d.drive ? `<span>${d.drive}</span>` : ''}
+          </div>
+          ${d.notes && d.notes !== '[value]' ? `<div class="day-card-note">${d.notes}</div>` : ''}
+        </div>
+        <div class="day-card-chevron">›</div>
+      </div>`).join('');
+  }
+
+  function openDrawer(index) {
+    const d = tripDays[index];
+    if (!d) return;
+    drawerDayIndex = index;
+    document.getElementById('drawerDayLabel').textContent = `Day ${d.day}`;
+    document.getElementById('drawerTitle').textContent = d.location || 'Day ' + d.day;
+    document.getElementById('drawerDate').textContent = d.date || '—';
+    const body = document.getElementById('drawerBody');
+    body.innerHTML = `
+      ${d.isAnchor ? '<div class="drawer-anchor-badge">⚓ Fixed Event Anchor</div>' : ''}
+      <div class="drawer-section">
+        <div class="drawer-section-lbl">Details</div>
+        <div class="drawer-detail-row"><div class="drawer-detail-lbl">Date</div><div class="drawer-detail-val">${d.date || '—'}</div></div>
+        <div class="drawer-detail-row"><div class="drawer-detail-lbl">Location</div><div class="drawer-detail-val">${d.location || '—'}</div></div>
+        ${d.miles ? `<div class="drawer-detail-row"><div class="drawer-detail-lbl">Distance</div><div class="drawer-detail-val">~${d.miles} mi</div></div>` : ''}
+        ${d.drive ? `<div class="drawer-detail-row"><div class="drawer-detail-lbl">Drive Time</div><div class="drawer-detail-val">${d.drive}</div></div>` : ''}
+        ${d.overnight ? `<div class="drawer-detail-row"><div class="drawer-detail-lbl">Overnight</div><div class="drawer-detail-val">${d.overnight}</div></div>` : ''}
+      </div>
+      ${d.notes && d.notes !== '[value]' ? `
+      <div class="drawer-section">
+        <div class="drawer-section-lbl">Notes</div>
+        <div class="drawer-notes-text">${d.notes}</div>
+      </div>` : ''}
+      <div class="drawer-section" style="padding-top:4px;">
+        <div class="drawer-section-lbl">Actions</div>
+        <div class="drawer-detail-row" onclick="diveFromDrawer()" style="cursor:pointer;">
+          <div class="drawer-detail-lbl">🔍 Generate Day Deep-Dive</div>
+          <div class="drawer-detail-val" style="color:var(--orange);">→</div>
+        </div>
+        <div class="drawer-detail-row" onclick="closeDrawer();goToByName('daily');" style="cursor:pointer;">
+          <div class="drawer-detail-lbl">📅 View Full Daily Table</div>
+          <div class="drawer-detail-val" style="color:var(--orange);">→</div>
+        </div>
+      </div>`;
+    document.getElementById('dayDrawer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer(e) {
+    if (e && !e.target.classList.contains('drawer-overlay')) return;
+    document.getElementById('dayDrawer').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function diveFromDrawer() {
+    const d = tripDays[drawerDayIndex];
+    if (!d) return;
+    document.getElementById('dayNumber').value = d.day;
+    updateDayHint();
+    document.getElementById('dayDrawer').classList.remove('open');
+    document.body.style.overflow = '';
+    goToByName('daydive');
+  }
+
+  // Call after doc loads or after generation
+  function refreshHomeCards() {
+    if (!docContent) return;
+    const days = parseDaysFromDoc(docContent);
+    if (days.length) {
+      // Mark anchor days
+      const anchorDates = parseAnchorsFromDoc(docContent);
+      days.forEach(d => { if (anchorDates.some(a => a.includes(d.date) || d.date.includes(a.split('/')[1]))) d.isAnchor = true; });
+      buildDayCards(days);
+    }
+  }
   function syncHeader() {
     const d = document.getElementById('duration').value;
     const dt = document.getElementById('departDate').value;
@@ -1033,6 +1205,7 @@
     document.getElementById('uploadCard').classList.add('loaded');
     document.getElementById('uploadStatus').textContent = `✓ ${title} · ${(pendingDocText.length/1000).toFixed(1)}k chars${parsed ? ' · params loaded ✓' : ''}`;
     document.getElementById('statDoc').textContent = '1';
+    refreshHomeCards();
     document.getElementById('uploadModal').classList.remove('open');
   }
   async function readDocx(file) {
