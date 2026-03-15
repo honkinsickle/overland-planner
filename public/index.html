@@ -296,12 +296,12 @@
       background: var(--surface); border: 1px solid var(--border2);
       border-radius: 12px; padding: 14px 16px; margin-bottom: 8px;
       cursor: pointer; transition: border-color 0.15s, background 0.12s;
-      display: flex; align-items: center; gap: 14px; position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
     .day-card:active { background: var(--sf2); }
     .day-card.anchor { border-color: rgba(192,57,43,0.4); }
     .day-card.anchor::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--red); border-radius: 12px 0 0 12px; }
+    .day-card-top { display: flex; align-items: center; gap: 14px; }
     .day-num-badge { width: 36px; height: 36px; border-radius: 50%; background: var(--sf3); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--text2); flex-shrink: 0; }
     .day-card.anchor .day-num-badge { background: rgba(192,57,43,0.15); color: var(--red); }
     .day-card-info { flex: 1; min-width: 0; }
@@ -309,8 +309,9 @@
     .day-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); display: flex; gap: 8px; flex-wrap: wrap; }
     .day-card-meta span { white-space: nowrap; }
     .day-card-meta .miles { color: var(--orange2); }
-    .day-card-note { font-size: 12px; color: var(--text2); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .day-card-chevron { color: var(--text3); font-size: 16px; flex-shrink: 0; }
+    .day-card-overview { font-size: 12.5px; color: var(--text2); line-height: 1.6; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .day-card-overview-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--orange); letter-spacing: 1px; text-transform: uppercase; margin-top: 6px; }
 
     /* ── DAY DRAWER ── */
     .drawer-overlay {
@@ -633,7 +634,7 @@
           <div class="map-toolbar-title" id="mapTitle">Route Map</div>
           <div class="map-toolbar-sub" id="mapSub">Generate MyMaps CSV first to plot pins</div>
         </div>
-        <button class="map-plot-btn" id="mapPlotBtn" onclick="plotMap()">⚡ Plot Route</button>
+        <button class="map-plot-btn" id="mapPlotBtn" onclick="plotMap()">> Plot Route</button>
       </div>
       <div id="mapContainer"></div>
       <div class="map-empty" id="mapEmpty">
@@ -790,7 +791,7 @@
 <div class="gen-bar" id="genBar">
   <button class="gen-btn" id="genBtn" onclick="runPlanner()">
     <span class="spinner" id="genSpinner" style="display:none;"></span>
-    <span id="genText">⚡ Generate Route Summary</span>
+    <span id="genText">> Generate Route Summary</span>
   </button>
   <div class="gen-sub" id="genSub">upload reference doc to auto-fill parameters</div>
 </div>
@@ -804,19 +805,20 @@
   let eventCount = 0;
   let pendingDocContent = '';
   let pendingDocText = '';
+  let dayOverviews = {};   // keyed by day number, value is overview text
 
   function getScreenLabel(name) {
     const labels = {
-      home:    tripDays.length ? '⚡ Refresh Day Cards' : '+ Create New Trip',
-      create:  '⚡ Generate from This Trip',
-      daily:   '⚡ Generate Daily Table',
-      csv:     '⚡ Generate MyMaps CSV',
-      map:     '⚡ Generate & Plot Route',
-      daydive: '⚡ Generate Day Deep-Dive',
-      permits: '⚡ Generate Permits Report',
-      food:    '⚡ Generate Food Guide',
+      home:    tripDays.length ? '* Refresh Day Cards' : '+ Create New Trip',
+      create:  '* Generate from This Trip',
+      daily:   '* Generate Daily Table',
+      csv:     '* Generate MyMaps CSV',
+      map:     '* Generate & Plot Route',
+      daydive: '* Generate Day Deep-Dive',
+      permits: '* Generate Permits Report',
+      food:    '* Generate Food Guide',
     };
-    return labels[name] || '⚡ Generate';
+    return labels[name] || '* Generate';
   }
 
   // ── MAP ──
@@ -982,7 +984,7 @@
       document.getElementById('mapEmpty').querySelector('.map-empty-title').textContent = '⚠ ' + err.message;
     } finally {
       currentScreen = prevScreen === 'csv' ? 'map' : 'map';
-      btn.textContent = '⚡ Plot Route';
+      btn.textContent = '* Plot Route';
       btn.disabled = false;
     }
   }
@@ -1203,27 +1205,45 @@
     else              lbl.textContent = 'Trip Itinerary';
 
     list.innerHTML = days.map((d, i) => {
-      const hasNote = d.notes && d.notes !== '[value]' && d.notes.trim();
-      const anchor  = d.isAnchor;
+      const hasNote    = d.notes && d.notes !== '[value]' && d.notes.trim();
+      const overview   = dayOverviews[d.day] || '';
+      const anchor     = d.isAnchor;
+      const previewTxt = overview || (hasNote ? d.notes : '');
       return `
       <div class="day-card${anchor ? ' anchor' : ''}" onclick="openDrawer(${i})">
-        <div class="day-num-badge">${anchor ? '⚓' : d.day}</div>
-        <div class="day-card-info">
-          <div class="day-card-title">${d.location || `Day ${d.day}`}</div>
-          <div class="day-card-meta">
-            <span>${d.date || '—'}</span>
-            ${d.miles ? `<span class="miles">~${d.miles} mi</span>` : ''}
-            ${d.drive ? `<span>${d.drive}</span>` : ''}
-            ${anchor ? `<span style="color:var(--red);">Fixed event</span>` : ''}
+        <div class="day-card-top">
+          <div class="day-num-badge">${anchor ? '⚓' : d.day}</div>
+          <div class="day-card-info">
+            <div class="day-card-title">${d.location || `Day ${d.day}`}</div>
+            <div class="day-card-meta">
+              <span>${d.date || '—'}</span>
+              ${d.miles ? `<span class="miles">~${d.miles} mi</span>` : ''}
+              ${d.drive ? `<span>${d.drive}</span>` : ''}
+              ${anchor ? `<span style="color:var(--red);">⚓ Fixed event</span>` : ''}
+            </div>
           </div>
-          ${hasNote ? `<div class="day-card-note">${d.notes}</div>` : ''}
+          <div class="day-card-chevron">›</div>
         </div>
-        <div class="day-card-chevron">›</div>
+        ${previewTxt ? `<div class="day-card-overview">${previewTxt}</div>` : ''}
+        ${overview ? `<div class="day-card-overview-label">Day Overview</div>` : ''}
       </div>`;
     }).join('');
   }
 
-  // Refresh home cards from current docContent
+  // Extract overview paragraph from a generated deep-dive and cache it
+  function extractAndCacheDayOverview(raw, dayNum) {
+    if (!dayNum || !raw) return;
+    // Look for "Day Overview" section — grab the paragraph(s) after it
+    const overviewMatch = raw.match(/Day\s+Overview[^\n]*\n+([^\n#]+(?:\n(?![#\*])[^\n]+)*)/i);
+    if (overviewMatch) {
+      const text = overviewMatch[1].replace(/\*\*/g,'').replace(/[*_`]/g,'').replace(/\n+/g,' ').trim();
+      if (text.length > 20) {
+        dayOverviews[dayNum] = text.slice(0, 200) + (text.length > 200 ? '…' : '');
+        buildDayCards(tripDays); // re-render cards with new overview
+      }
+    }
+  }
+
   function refreshHomeCards() {
     const text = docContent;
     if (!text) return;
@@ -1518,7 +1538,58 @@
     document.getElementById('uploadModal').classList.remove('open');
     refreshHomeCards();
     goToByName('home');
+    // Auto-generate deep-dives for all days in the background
+    setTimeout(() => generateAllDayOverviews(), 300);
   }
+
+  // Generate Day Deep-Dive for every day and cache the overview on each card
+  async function generateAllDayOverviews() {
+    if (!tripDays.length) return;
+    const days = tripDays.filter(d => d.location); // only days with known locations
+    if (!days.length) return;
+
+    // Show a subtle status indicator on the home cards header
+    const lbl = document.getElementById('homeTripLabel');
+    const originalLabel = lbl.textContent;
+    let completed = 0;
+
+    for (const d of days) {
+      if (dayOverviews[d.day]) { completed++; continue; } // already cached
+      try {
+        lbl.textContent = `${originalLabel} · Generating day ${d.day}/${days.length}…`;
+        const prompt = `Generate a brief Day Overview paragraph (3-5 sentences) for Day ${d.day} of this overland trip.
+Day: ${d.day} | Date: ${d.date} | Location: ${d.location}${d.notes ? ' | Notes: ' + d.notes : ''}
+Trip context: ${document.getElementById('startLoc').value || ''} to ${document.getElementById('endLoc').value || ''}
+
+Respond with ONLY the overview paragraph — no headers, no bullet points, no labels. Just the paragraph text describing what this day involves, what to expect, and why it's notable.`;
+
+        const res = await fetch('/api/plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system: SYSTEM,
+            max_tokens: 200,
+            messages: [{ role: 'user', content: prompt }],
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const raw = (data.content || []).map(b => b.text || '').join('').trim();
+          if (raw.length > 20) {
+            dayOverviews[d.day] = raw.slice(0, 220) + (raw.length > 220 ? '…' : '');
+            buildDayCards(tripDays); // re-render with new overview
+          }
+        }
+      } catch (e) {
+        // Silently skip failed days
+      }
+      completed++;
+      // Small delay between calls to avoid rate limiting
+      await new Promise(r => setTimeout(r, 400));
+    }
+    lbl.textContent = originalLabel;
+  }
+
   async function readDocx(file) {
     const zip = await JSZip.loadAsync(file);
     const xmlFile = zip.file('word/document.xml');
@@ -1658,6 +1729,11 @@ CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State a
       }
       else outBody.innerHTML = renderMD(raw);
       updateStatsFromOutput(raw);
+      // Cache overview if this was a day deep-dive
+      if (currentScreen === 'daydive') {
+        const dayNum = parseInt(document.getElementById('dayNumber').value);
+        extractAndCacheDayOverview(raw, dayNum);
+      }
       sub.textContent = 'Done · tap COPY to export';
       setTimeout(() => outWrap.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
     } catch(err) {
