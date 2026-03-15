@@ -54,53 +54,68 @@ app.get('/api/gdrive', async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'Missing url parameter' });
 
-  // Only allow Google domains
-  try {
-    const parsed = new URL(url);
-    if (!parsed.hostname.endsWith('google.com')) {
-      return res.status(400).json({ error: 'Only Google Drive/Docs URLs are supported' });
-    }
-  } catch {
-    return res.status(400).json({ error: 'Invalid URL' });
+  // Extract doc ID from any Google Docs/Drive URL
+  const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+  const docId = idMatch ? idMatch[1] : null;
+  const isGoogleDoc = url.includes('docs.google.com/document');
+
+  if (!docId) {
+    return res.status(400).json({ error: 'Could not extract document ID from URL. Make sure it\'s a Google Docs or Drive link.' });
   }
 
-  try {
-    const upstream = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; OverlandPlanner/1.0)',
-        'Accept': 'text/plain,text/html,*/*',
-      },
-      redirect: 'follow',
-    });
+  // Try multiple export strategies in order
+  const strategies = isGoogleDoc ? [
+    `https://docs.google.com/document/d/${docId}/export?format=txt`,
+    `https://docs.google.com/document/d/${docId}/export?format=html`,
+    `https://docs.google.com/feeds/download/documents/export/Export?id=${docId}&exportFormat=txt`,
+  ] : [
+    `https://drive.google.com/uc?export=download&id=${docId}`,
+    `https://drive.google.com/uc?id=${docId}&export=download`,
+  ];
 
-    if (!upstream.ok) {
-      return res.status(upstream.status).json({
-        error: `Google returned ${upstream.status}. Make sure the doc is set to "Anyone with the link can view".`
-      });
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/plain,text/html,application/xhtml+xml,*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+  };
+
+  for (const exportUrl of strategies) {
+    try {
+      const upstream = await fetch(exportUrl, { headers, redirect: 'follow' });
+
+      if (!upstream.ok) continue; // try next strategy
+
+      const text = await upstream.text();
+
+      // Clean HTML if needed
+      const clean = text
+        .replace(/<\/?(p|div|tr|td|th|li|h[1-6]|br|section|article)[^>]*>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'")
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\n[ \t]+/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+      if (clean.length < 50) continue; // try next strategy
+
+      // Check if we got an auth/login page instead of content
+      if (clean.toLowerCase().includes('sign in') && clean.toLowerCase().includes('google') && clean.length < 2000) {
+        continue;
+      }
+
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send(clean);
+    } catch (err) {
+      console.error(`Strategy failed for ${exportUrl}:`, err.message);
+      continue;
     }
-
-    const text = await upstream.text();
-
-    // Preserve structure: block elements → newlines, then strip remaining tags
-    const clean = text
-      .replace(/<\/?(p|div|tr|td|th|li|h[1-6]|br)[^>]*>/gi, '\n')  // block tags → newline
-      .replace(/<[^>]+>/g, '')                                        // strip all remaining tags
-      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
-      .replace(/[ \t]+/g, ' ')                                        // collapse horizontal space only
-      .replace(/\n[ \t]+/g, '\n')                                     // trim line starts
-      .replace(/\n{3,}/g, '\n\n')                                     // max 2 blank lines
-      .trim();
-
-    if (clean.length < 50) {
-      return res.status(403).json({ error: 'Document appears empty or access was denied. Set sharing to "Anyone with the link can view".' });
-    }
-
-    res.setHeader('Content-Type', 'text/plain');
-    res.send(clean);
-  } catch (err) {
-    console.error('Drive proxy error:', err);
-    res.status(500).json({ error: 'Failed to fetch from Google Drive: ' + err.message });
   }
+
+  // All strategies failed
+  res.status(404).json({
+    error: 'Could not fetch document. Make sure it\'s set to "Anyone with the link can view" in Google Drive sharing settings.'
+  });
 });
 
 
