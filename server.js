@@ -80,8 +80,17 @@ app.get('/api/gdrive', async (req, res) => {
     }
 
     const text = await upstream.text();
-    // Strip any HTML if Google returned a page instead of plain text
-    const clean = text.replace(/<[^>]+>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+
+    // Preserve structure: block elements → newlines, then strip remaining tags
+    const clean = text
+      .replace(/<\/?(p|div|tr|td|th|li|h[1-6]|br)[^>]*>/gi, '\n')  // block tags → newline
+      .replace(/<[^>]+>/g, '')                                        // strip all remaining tags
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
+      .replace(/[ \t]+/g, ' ')                                        // collapse horizontal space only
+      .replace(/\n[ \t]+/g, '\n')                                     // trim line starts
+      .replace(/\n{3,}/g, '\n\n')                                     // max 2 blank lines
+      .trim();
+
     if (clean.length < 50) {
       return res.status(403).json({ error: 'Document appears empty or access was denied. Set sharing to "Anyone with the link can view".' });
     }
