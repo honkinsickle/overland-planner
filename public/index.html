@@ -270,12 +270,26 @@
     .modal-gdrive-status.err  { color: var(--red); }
     .modal-gdrive-status.info { color: var(--text3); }
     /* ── HOME EMPTY STATE ── */
-    .home-empty { text-align: center; padding: 48px 20px 24px; }
+    .home-empty { text-align: center; padding: 40px 20px 24px; }
     .home-empty-icon { font-size: 40px; margin-bottom: 12px; }
-    .home-empty-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .home-empty-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
     .home-empty-sub { font-size: 12px; color: var(--text2); font-family: 'JetBrains Mono', monospace; line-height: 1.6; margin-bottom: 20px; }
-    .home-empty-btn { display: block; width: 100%; max-width: 260px; margin: 0 auto 10px; background: var(--orange); color: #fff; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; border: none; border-radius: 10px; padding: 13px; cursor: pointer; }
-    .home-empty-btn.secondary { background: var(--sf2); border: 1px solid var(--border2); color: var(--text2); }
+    .home-upload-primary {
+      display: flex; align-items: center; gap: 14px; width: 100%;
+      background: var(--surface); border: 1.5px solid var(--border2);
+      border-radius: 14px; padding: 16px 18px; cursor: pointer;
+      transition: border-color 0.15s; text-align: left; margin-bottom: 12px;
+    }
+    .home-upload-primary:active { border-color: var(--orange); background: rgba(232,114,12,0.06); }
+    .home-upload-icon { font-size: 28px; flex-shrink: 0; }
+    .home-upload-label { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .home-upload-hint { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+    .home-upload-arrow { font-size: 22px; color: var(--text3); margin-left: auto; flex-shrink: 0; }
+    .home-empty-divider { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin: 4px 0 10px; }
+    .home-empty-btn { display: block; width: 100%; background: transparent; border: 1px solid var(--border2); color: var(--text2); font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; border-radius: 10px; padding: 12px; cursor: pointer; }
+    .home-empty-btn:active { border-color: var(--orange); color: var(--orange); }
+    .home-cards-header { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 2px; }
+    .home-reload-btn { background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; font-size: 14px; padding: 5px 10px; cursor: pointer; color: var(--text2); }
 
     /* ── DAY CARDS ── */
     .day-card {
@@ -543,14 +557,25 @@
 
       <div class="home-empty" id="homeEmpty">
         <div class="home-empty-icon">🗺️</div>
-        <div class="home-empty-title">No itinerary loaded</div>
-        <div class="home-empty-sub">Upload a reference doc or create a trip to see your day-by-day plan here</div>
-        <button class="home-empty-btn" onclick="goToByName('create')">+ New Trip</button>
-        <button class="home-empty-btn secondary" onclick="openUploadModal()">📂 Upload Doc</button>
+        <div class="home-empty-title">Start your trip</div>
+        <div class="home-empty-sub">Upload your reference doc to load your itinerary</div>
+        <button class="home-upload-primary" onclick="openUploadModal()">
+          <span class="home-upload-icon">📂</span>
+          <div>
+            <div class="home-upload-label">Upload Reference Doc</div>
+            <div class="home-upload-hint">.docx · .txt · Google Drive link</div>
+          </div>
+          <span class="home-upload-arrow">›</span>
+        </button>
+        <div class="home-empty-divider">or</div>
+        <button class="home-empty-btn secondary" onclick="goToByName('create')">Build trip manually →</button>
       </div>
 
       <div id="homeDayCards" style="display:none;">
-        <div class="sec-lbl" id="homeTripLabel">Trip Overview</div>
+        <div class="home-cards-header">
+          <div class="sec-lbl" id="homeTripLabel">Trip Overview</div>
+          <button class="home-reload-btn" onclick="openUploadModal()" title="Change doc">📂</button>
+        </div>
         <div id="dayCardsList"></div>
       </div>
 
@@ -982,6 +1007,7 @@
     document.getElementById('genText').textContent = getScreenLabel(name);
     updateSummaryCards();
     document.getElementById('genBar').style.display = (name === 'home' || name === 'map') ? 'none' : 'block';
+    if (name === 'home' && docContent) refreshHomeCards();
     if (name === 'map') {
       setTimeout(() => { initMap(); if (leafletMap) leafletMap.invalidateSize(); }, 50);
     }
@@ -1115,7 +1141,7 @@
     const placeholder = /^\[.*\]$|^\[value\]$/i;
 
     // ── Try Section 04 first ──
-    const sec04 = text.match(/04\s+FULL\s+ITINERARY[\s\S]*?(?=\n#|\n05|\z)/i)?.[0] || text;
+    const sec04 = text.match(/04\s+FULL\s+ITINERARY[\s\S]*?(?=\n#|\n05|$)/im)?.[0] || text;
     const rows04 = sec04.match(/\|\s*\d+\s*\|[^\n]+/g) || [];
     rows04.forEach(row => {
       const cols = row.split('|').map(c => c.trim()).filter(Boolean);
@@ -1133,7 +1159,7 @@
     // ── Fall back to Section 03 Fixed Events if 04 had no real data ──
     const usable = days.filter(d => d.location);
     if (!usable.length) {
-      const sec03 = text.match(/03\s+FIXED\s+DATE\s+EVENTS[\s\S]*?(?=\n#|\n04|\z)/i)?.[0] || '';
+      const sec03 = text.match(/03\s+FIXED\s+DATE\s+EVENTS[\s\S]*?(?=\n#|\n04|$)/im)?.[0] || '';
       const rows03 = sec03.match(/\d{1,2}\/\d{1,2}\/\d{2,4}\s*\|[^\n]+/g) || [];
       let dayNum = 1;
       rows03.forEach(row => {
@@ -1160,7 +1186,7 @@
   // Parse fixed events from Section 03 — returns rich objects
   function parseAnchorsFromDoc(text) {
     const anchors = [];
-    const sec03 = text.match(/03\s+FIXED\s+DATE\s+EVENTS[\s\S]*?(?=\n#|\n04|\z)/i)?.[0] || text;
+    const sec03 = text.match(/03\s+FIXED\s+DATE\s+EVENTS[\s\S]*?(?=\n#|\n04|$)/im)?.[0] || text;
     const rows = sec03.match(/\d{1,2}\/\d{1,2}\/\d{2,4}\s*\|[^\n]+/g) || [];
     rows.forEach(row => {
       const cols = row.split('|').map(c => c.trim());
@@ -1211,7 +1237,41 @@
   function refreshHomeCards() {
     const text = docContent;
     if (!text) return;
-    const days = parseDaysFromDoc(text);
+
+    let days = parseDaysFromDoc(text);
+
+    // If parser found nothing, build basic cards from what we know
+    if (!days.length) {
+      // Try raw line scanning — look for any line with a date pattern and location
+      const dateLines = text.match(/\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b[^\n]*/g) || [];
+      let dayNum = 1;
+      dateLines.slice(0, 20).forEach(line => {
+        const dateMatch = line.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+        if (!dateMatch) return;
+        // Get text after the date
+        const rest = line.slice(dateMatch.index + dateMatch[0].length).replace(/[\|,]/g, ' ').trim();
+        const words = rest.split(/\s+/).filter(w => w.length > 2 && !/^\[/.test(w));
+        if (!words.length) return;
+        const location = words.slice(0, 5).join(' ').replace(/\[.*\]/g, '').trim();
+        if (location.length < 3) return;
+        days.push({ day: dayNum++, date: dateMatch[0], location, notes: '', miles:'', drive:'', overnight:'', isAnchor: true });
+      });
+    }
+
+    // Last resort — if we have duration and start, generate numbered placeholder cards
+    if (!days.length) {
+      const dur = parseInt(document.getElementById('duration').value || document.getElementById('c-duration').value) || 0;
+      const start = document.getElementById('startLoc').value || document.getElementById('c-startLoc').value;
+      const end = document.getElementById('endLoc').value || document.getElementById('c-endLoc').value;
+      const depart = document.getElementById('departDate').value || document.getElementById('c-departDate').value;
+      if (dur > 0) {
+        for (let i = 1; i <= Math.min(dur, 30); i++) {
+          const loc = i === 1 ? start : i === dur ? end : '';
+          days.push({ day: i, date: depart ? `Day ${i}` : '', location: loc || `Day ${i}`, notes: 'Tap to generate details', miles:'', drive:'', overnight:'', isAnchor: false });
+        }
+      }
+    }
+
     if (days.length) buildDayCards(days);
   }
 
@@ -1476,8 +1536,10 @@
     const fileTitle = document.getElementById('modalUploadTitle').textContent;
     if (btn) { btn.textContent = `✓ ${fileTitle}`; btn.classList.add('loaded'); }
     document.getElementById('statDoc').textContent = '1';
-    refreshHomeCards();
     document.getElementById('uploadModal').classList.remove('open');
+    refreshHomeCards();
+    // Always go to Home so user sees the cards
+    goToByName('home');
   }
   async function readDocx(file) {
     const zip = await JSZip.loadAsync(file);
@@ -1516,7 +1578,7 @@
       const el = document.getElementById(dst);
       if (v && el && !el.value) el.value = v;
     });
-    if (found) syncHeader();
+    if (found) { syncHeader(); refreshHomeCards(); }
     return found;
   }
 
