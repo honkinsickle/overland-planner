@@ -6,6 +6,7 @@
   <title>Claud v1.1 — Overland Planner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
@@ -352,10 +353,10 @@
   <!-- REFERENCE DOC -->
   <div class="section-lbl">Reference Document</div>
   <div class="upload-card" id="uploadCard">
-    <input type="file" id="docUpload" accept=".txt,.md,.csv"/>
+    <input type="file" id="docUpload" accept=".txt,.md,.csv,.docx"/>
     <div class="upload-icon">📂</div>
     <div class="upload-title">Upload Events &amp; Food Doc</div>
-    <div class="upload-sub">.txt · .md · .csv &nbsp;·&nbsp; tap to browse</div>
+    <div class="upload-sub">.docx · .txt · .md &nbsp;·&nbsp; tap to browse</div>
     <div class="upload-status" id="uploadStatus"></div>
   </div>
 
@@ -613,6 +614,24 @@
   }
 
   // File upload
+  // Extract plain text from a .docx file using JSZip
+  async function readDocx(file) {
+    const zip = await JSZip.loadAsync(file);
+    const xmlFile = zip.file('word/document.xml');
+    if (!xmlFile) throw new Error('Not a valid .docx file');
+    const xml = await xmlFile.async('string');
+    // Strip XML tags, decode entities, collapse whitespace
+    return xml
+      .replace(/<w:p[ >][^>]*>/g, '\n')   // paragraph → newline
+      .replace(/<w:tab\/>/g, '\t')          // tabs
+      .replace(/<[^>]+>/g, '')              // strip all tags
+      .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&apos;/g,"'").replace(/&quot;/g,'"')
+      .replace(/[ \t]+/g, ' ')             // collapse spaces
+      .replace(/\n[ \t]+/g, '\n')          // trim line starts
+      .replace(/\n{3,}/g, '\n\n')          // max 2 blank lines
+      .trim();
+  }
+
   document.getElementById('docUpload').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -620,13 +639,21 @@
     const card = document.getElementById('uploadCard');
     status.textContent = 'Reading…';
     try {
-      const text = await file.text();
+      let text;
+      if (file.name.endsWith('.docx')) {
+        text = await readDocx(file);
+      } else {
+        text = await file.text();
+      }
       docContent = text.slice(0, 14000);
       card.classList.add('has-file');
       const parsed = parseRefDoc(docContent);
-      status.textContent = `✓ ${file.name} · ${(text.length/1000).toFixed(1)}k chars${parsed ? ' · params loaded' : ''}`;
+      status.textContent = `✓ ${file.name} · ${(text.length/1000).toFixed(1)}k chars${parsed ? ' · params loaded ✓' : ''}`;
       document.getElementById('statDoc').textContent = '1';
-    } catch { status.textContent = 'Error — use .txt or .md'; docContent = ''; }
+    } catch(err) {
+      status.textContent = `Error: ${err.message}`;
+      docContent = '';
+    }
   });
 
   // Filter pills sync to mode
