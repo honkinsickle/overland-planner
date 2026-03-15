@@ -729,16 +729,25 @@
 <script>
   let docContent = '';
   let currentScreen = 'home';
+  let tripDays = [];
+  let drawerDayIndex = 0;
+  let selectedStyles = [];
+  let eventCount = 0;
+  let pendingDocContent = '';
+  let pendingDocText = '';
 
-  const SCREEN_LABELS = {
-    home:    tripDays.length ? '⚡ Refresh Day Cards' : '+ Create New Trip',
-    create:  '⚡ Generate from This Trip',
-    daily:   '⚡ Generate Daily Table',
-    csv:     '⚡ Generate MyMaps CSV',
-    daydive: '⚡ Generate Day Deep-Dive',
-    permits: '⚡ Generate Permits Report',
-    food:    '⚡ Generate Food Guide',
-  };
+  function getScreenLabel(name) {
+    const labels = {
+      home:    tripDays.length ? '⚡ Refresh Day Cards' : '+ Create New Trip',
+      create:  '⚡ Generate from This Trip',
+      daily:   '⚡ Generate Daily Table',
+      csv:     '⚡ Generate MyMaps CSV',
+      daydive: '⚡ Generate Day Deep-Dive',
+      permits: '⚡ Generate Permits Report',
+      food:    '⚡ Generate Food Guide',
+    };
+    return labels[name] || '⚡ Generate';
+  }
 
   // ── NAVIGATION ──
   function goTo(name, tabEl) {
@@ -747,14 +756,10 @@
     document.getElementById('screen-' + name).classList.add('active');
     if (tabEl) tabEl.classList.add('active');
     currentScreen = name;
-    document.getElementById('genText').textContent = SCREEN_LABELS[name] || '⚡ Generate';
+    document.getElementById('genText').textContent = getScreenLabel(name);
     updateSummaryCards();
     document.getElementById('genBar').style.display = name === 'home' ? 'none' : 'block';
   }
-
-  // ── CREATE TRIP ──
-  let selectedStyles = [];
-  let eventCount = 0;
 
   function toggleChip(el) {
     el.classList.toggle('on');
@@ -876,8 +881,6 @@
   }
 
   // ── DAY CARDS & DRAWER ──
-  let tripDays = [];   // array of day objects parsed from doc or generated output
-  let drawerDayIndex = 0;
 
   // Parse Section 04 Full Itinerary from doc text into day objects
   function parseDaysFromDoc(text) {
@@ -1146,8 +1149,6 @@
       btn.disabled = false;
     }
   }
-  let pendingDocContent = '';
-  let pendingDocText = '';
 
   function openUploadModal() {
     pendingDocContent = '';
@@ -1340,7 +1341,7 @@ CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State a
     } finally {
       btn.disabled = false;
       spinner.style.display = 'none';
-      btnText.textContent = SCREEN_LABELS[currentScreen] || '⚡ Generate';
+      btnText.textContent = getScreenLabel(currentScreen);
     }
   }
 
