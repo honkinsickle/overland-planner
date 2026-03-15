@@ -791,7 +791,7 @@
 
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeUploadModal()">Cancel</button>
-      <button class="modal-confirm" id="modalConfirmBtn" disabled onclick="confirmUpload()">Load Doc →</button>
+      <button class="modal-confirm" id="modalConfirmBtn" disabled onclick="confirmUpload()">Create Trip →</button>
     </div>
   </div>
 </div>
@@ -1538,8 +1538,8 @@
     document.getElementById('statDoc').textContent = '1';
     document.getElementById('uploadModal').classList.remove('open');
     refreshHomeCards();
-    // Always go to Home so user sees the cards
-    goToByName('home');
+    // Navigate to Create Trip so user can review/edit before generating
+    goToByName('create');
   }
   async function readDocx(file) {
     const zip = await JSZip.loadAsync(file);
