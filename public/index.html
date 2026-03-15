@@ -1266,7 +1266,7 @@
   }
 
   function openDrawer(index) {
-    if (!d) return;
+    const d = tripDays[index];
     drawerDayIndex = index;
     document.getElementById('drawerDayLabel').textContent = `Day ${d.day}`;
     document.getElementById('drawerTitle').textContent = d.location || 'Day ' + d.day;
@@ -1318,17 +1318,6 @@
     goToByName('daydive');
   }
 
-  // Call after doc loads or after generation
-  function refreshHomeCards() {
-    if (!docContent) return;
-    const days = parseDaysFromDoc(docContent);
-    if (days.length) {
-      // Mark anchor days
-      const anchorDates = parseAnchorsFromDoc(docContent);
-      days.forEach(d => { if (anchorDates.some(a => a.includes(d.date) || d.date.includes(a.split('/')[1]))) d.isAnchor = true; });
-      buildDayCards(days);
-    }
-  }
   function syncHeader() {
     const d = document.getElementById('duration').value;
     const dt = document.getElementById('departDate').value;
@@ -1528,8 +1517,7 @@
     document.getElementById('statDoc').textContent = '1';
     document.getElementById('uploadModal').classList.remove('open');
     refreshHomeCards();
-    // Navigate to Create Trip so user can review/edit before generating
-    goToByName('create');
+    goToByName('home');
   }
   async function readDocx(file) {
     const zip = await JSZip.loadAsync(file);
