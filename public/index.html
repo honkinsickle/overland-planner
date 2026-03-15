@@ -315,27 +315,43 @@
 
     /* ── DAY DRAWER ── */
     .drawer-overlay {
-      display: none; position: fixed; inset: 0; z-index: 400;
-      background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
-      align-items: flex-end; justify-content: center;
+      position: fixed; inset: 0; z-index: 400;
+      pointer-events: none;
     }
-    .drawer-overlay.open { display: flex; }
+    .drawer-overlay.open { pointer-events: all; }
     .drawer-box {
-      background: var(--bg2); border: 1px solid var(--border2);
-      border-radius: 20px 20px 0 0; width: 100%; max-width: 600px;
-      max-height: 85vh; display: flex; flex-direction: column;
-      animation: slideUp 0.28s cubic-bezier(0.32,0.72,0,1);
+      position: absolute; top: 0; right: 0; bottom: 0;
+      width: 100%; max-width: 600px;
+      background: var(--bg2);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
       padding-bottom: env(safe-area-inset-bottom, 0px);
+      border-left: 1px solid var(--border2);
     }
-    .drawer-handle { width: 36px; height: 4px; background: var(--sf3); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
-    .drawer-hdr { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+    .drawer-overlay.open .drawer-box { transform: translateX(0); }
+    .drawer-handle { display: none; }
+    .drawer-hdr {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px;
+      flex-shrink: 0;
+      background: var(--bg2);
+    }
+    .drawer-back-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: none; color: var(--orange);
+      font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; padding: 0; flex-shrink: 0;
+    }
     .drawer-day-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--orange); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
     .drawer-title { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 3px; }
     .drawer-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); }
     .drawer-dive-btn { background: var(--orange); color: #fff; border: none; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; padding: 8px 14px; border-radius: 20px; cursor: pointer; white-space: nowrap; flex-shrink: 0; margin-top: 4px; }
-    .drawer-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 18px 24px; flex: 1; }
+    .drawer-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 18px 40px; flex: 1; }
 
-    /* Drawer row items */
+    /* Drawer content */
     .drawer-section { margin-bottom: 16px; }
     .drawer-section-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .drawer-section-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
@@ -719,17 +735,16 @@
   </div><!-- /screens -->
 </div><!-- /app-shell -->
 
-<!-- DAY DETAIL DRAWER -->
-<div class="drawer-overlay" id="dayDrawer" onclick="closeDrawer(event)">
+<!-- DAY DETAIL PANEL -->
+<div class="drawer-overlay" id="dayDrawer">
   <div class="drawer-box" id="drawerBox">
-    <div class="drawer-handle"></div>
     <div class="drawer-hdr">
-      <div>
+      <button class="drawer-back-btn" onclick="closeDrawer()">‹ Back</button>
+      <div style="flex:1;text-align:right;">
         <div class="drawer-day-label" id="drawerDayLabel">Day 1</div>
         <div class="drawer-title" id="drawerTitle">Location</div>
         <div class="drawer-date" id="drawerDate">—</div>
       </div>
-      <button class="drawer-dive-btn" id="drawerDiveBtn" onclick="diveFromDrawer()">Deep-Dive →</button>
     </div>
     <div class="drawer-body" id="drawerBody"></div>
   </div>
@@ -1287,43 +1302,60 @@
 
   function openDrawer(index) {
     const d = tripDays[index];
+    if (!d) return;
     drawerDayIndex = index;
     document.getElementById('drawerDayLabel').textContent = `Day ${d.day}`;
     document.getElementById('drawerTitle').textContent = d.location || 'Day ' + d.day;
     document.getElementById('drawerDate').textContent = d.date || '—';
     const body = document.getElementById('drawerBody');
-    body.innerHTML = `
-      ${d.isAnchor ? '<div class="drawer-anchor-badge">⚓ Fixed Event Anchor</div>' : ''}
-      <div class="drawer-section">
-        <div class="drawer-section-lbl">Details</div>
-        <div class="drawer-detail-row"><div class="drawer-detail-lbl">Date</div><div class="drawer-detail-val">${d.date || '—'}</div></div>
-        <div class="drawer-detail-row"><div class="drawer-detail-lbl">Location</div><div class="drawer-detail-val">${d.location || '—'}</div></div>
-        ${d.miles ? `<div class="drawer-detail-row"><div class="drawer-detail-lbl">Distance</div><div class="drawer-detail-val">~${d.miles} mi</div></div>` : ''}
-        ${d.drive ? `<div class="drawer-detail-row"><div class="drawer-detail-lbl">Drive Time</div><div class="drawer-detail-val">${d.drive}</div></div>` : ''}
-        ${d.overnight ? `<div class="drawer-detail-row"><div class="drawer-detail-lbl">Overnight</div><div class="drawer-detail-val">${d.overnight}</div></div>` : ''}
-      </div>
-      ${d.notes && d.notes !== '[value]' ? `
-      <div class="drawer-section">
-        <div class="drawer-section-lbl">Notes</div>
-        <div class="drawer-notes-text">${d.notes}</div>
-      </div>` : ''}
-      <div class="drawer-section" style="padding-top:4px;">
-        <div class="drawer-section-lbl">Actions</div>
-        <div class="drawer-detail-row" onclick="diveFromDrawer()" style="cursor:pointer;">
-          <div class="drawer-detail-lbl">🔍 Generate Day Deep-Dive</div>
-          <div class="drawer-detail-val" style="color:var(--orange);">→</div>
+
+    if (d.fullDive) {
+      // Show the cached full deep-dive
+      body.innerHTML = renderMD(d.fullDive) + `
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+          <div class="drawer-section-lbl">Actions</div>
+          <div class="drawer-detail-row" onclick="diveFromDrawer()" style="cursor:pointer;">
+            <div class="drawer-detail-lbl">🔍 Regenerate Deep-Dive</div>
+            <div class="drawer-detail-val" style="color:var(--orange);">→</div>
+          </div>
+          <div class="drawer-detail-row" onclick="closeDrawer();goToByName('daily');" style="cursor:pointer;">
+            <div class="drawer-detail-lbl">📅 Full Daily Table</div>
+            <div class="drawer-detail-val" style="color:var(--orange);">→</div>
+          </div>
+        </div>`;
+    } else {
+      body.innerHTML = `
+        ${d.isAnchor ? '<div class="drawer-anchor-badge">⚓ Fixed Event Anchor</div>' : ''}
+        <div class="drawer-section">
+          <div class="drawer-section-lbl">Details</div>
+          <div class="drawer-detail-row"><div class="drawer-detail-lbl">Date</div><div class="drawer-detail-val">${d.date || '—'}</div></div>
+          <div class="drawer-detail-row"><div class="drawer-detail-lbl">Location</div><div class="drawer-detail-val">${d.location || '—'}</div></div>
+          ${d.miles ? `<div class="drawer-detail-row"><div class="drawer-detail-lbl">Distance</div><div class="drawer-detail-val">~${d.miles} mi</div></div>` : ''}
+          ${d.drive ? `<div class="drawer-detail-row"><div class="drawer-detail-lbl">Drive Time</div><div class="drawer-detail-val">${d.drive}</div></div>` : ''}
+          ${d.overnight ? `<div class="drawer-detail-row"><div class="drawer-detail-lbl">Overnight</div><div class="drawer-detail-val">${d.overnight}</div></div>` : ''}
         </div>
-        <div class="drawer-detail-row" onclick="closeDrawer();goToByName('daily');" style="cursor:pointer;">
-          <div class="drawer-detail-lbl">📅 View Full Daily Table</div>
-          <div class="drawer-detail-val" style="color:var(--orange);">→</div>
-        </div>
-      </div>`;
+        ${d.notes && d.notes !== '[value]' ? `
+        <div class="drawer-section">
+          <div class="drawer-section-lbl">Notes</div>
+          <div class="drawer-notes-text">${d.notes}</div>
+        </div>` : ''}
+        <div class="drawer-section" style="padding-top:4px;">
+          <div class="drawer-section-lbl">Actions</div>
+          <div class="drawer-detail-row" onclick="diveFromDrawer()" style="cursor:pointer;">
+            <div class="drawer-detail-lbl">🔍 Generate Day Deep-Dive</div>
+            <div class="drawer-detail-val" style="color:var(--orange);">→</div>
+          </div>
+          <div class="drawer-detail-row" onclick="closeDrawer();goToByName('daily');" style="cursor:pointer;">
+            <div class="drawer-detail-lbl">📅 View Full Daily Table</div>
+            <div class="drawer-detail-val" style="color:var(--orange);">→</div>
+          </div>
+        </div>`;
+    }
     document.getElementById('dayDrawer').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
 
-  function closeDrawer(e) {
-    if (e && !e.target.classList.contains('drawer-overlay')) return;
+  function closeDrawer() {
     document.getElementById('dayDrawer').classList.remove('open');
     document.body.style.overflow = '';
   }
@@ -1542,50 +1574,62 @@
     setTimeout(() => generateAllDayOverviews(), 300);
   }
 
-  // Generate Day Deep-Dive for every day and cache the overview on each card
+  // Auto-generate full Day Deep-Dive for Day 1 and Day 2 on upload
   async function generateAllDayOverviews() {
     if (!tripDays.length) return;
-    const days = tripDays.filter(d => d.location); // only days with known locations
-    if (!days.length) return;
-
-    // Show a subtle status indicator on the home cards header
     const lbl = document.getElementById('homeTripLabel');
     const originalLabel = lbl.textContent;
-    let completed = 0;
+    const targetDays = tripDays.filter(d => d.day <= 2 && d.location);
+    if (!targetDays.length) return;
 
-    for (const d of days) {
-      if (dayOverviews[d.day]) { completed++; continue; } // already cached
+    for (const d of targetDays) {
+      if (dayOverviews[d.day]) continue;
+      lbl.textContent = `${originalLabel} · Generating Day ${d.day}…`;
       try {
-        lbl.textContent = `${originalLabel} · Generating day ${d.day}/${days.length}…`;
-        const prompt = `Generate a brief Day Overview paragraph (3-5 sentences) for Day ${d.day} of this overland trip.
-Day: ${d.day} | Date: ${d.date} | Location: ${d.location}${d.notes ? ' | Notes: ' + d.notes : ''}
-Trip context: ${document.getElementById('startLoc').value || ''} to ${document.getElementById('endLoc').value || ''}
+        const depart = document.getElementById('departDate').value || document.getElementById('c-departDate').value;
+        const start  = document.getElementById('startLoc').value   || document.getElementById('c-startLoc').value;
+        const end    = document.getElementById('endLoc').value     || document.getElementById('c-endLoc').value;
+        let dayCtx = '';
+        if (docContent) {
+          const m = docContent.match(new RegExp(`\\|\\s*0*${d.day}\\s*\\|([^\\n]+)`, 'i'));
+          if (m) dayCtx = `\nReference doc shows Day ${d.day}: | ${d.day} |${m[1]}`;
+        }
+        const prompt = `Generate a detailed deep-dive for Day ${d.day} of this overland trip.${dayCtx}
 
-Respond with ONLY the overview paragraph — no headers, no bullet points, no labels. Just the paragraph text describing what this day involves, what to expect, and why it's notable.`;
+TRIP: ${start} to ${end} | Departure: ${depart} | Day ${d.day}: ${d.location}${d.notes ? ' | Notes: ' + d.notes : ''}
+
+Use these markdown sections:
+## Day Overview
+3-5 sentence narrative of the day.
+## Drive Details
+Start, end, approximate miles and drive time.
+## Key Stops
+2-3 specific stops with what to do/see.
+## Overnight
+Best camping or lodging near ${d.location}.
+## Food
+1-2 local food recommendations near the route.`;
 
         const res = await fetch('/api/plan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system: SYSTEM,
-            max_tokens: 200,
-            messages: [{ role: 'user', content: prompt }],
-          }),
+          body: JSON.stringify({ system: SYSTEM, max_tokens: 600, messages: [{ role: 'user', content: prompt }] }),
         });
         const data = await res.json();
         if (res.ok) {
           const raw = (data.content || []).map(b => b.text || '').join('').trim();
-          if (raw.length > 20) {
-            dayOverviews[d.day] = raw.slice(0, 220) + (raw.length > 220 ? '…' : '');
-            buildDayCards(tripDays); // re-render with new overview
+          const overviewMatch = raw.match(/##\s*Day\s+Overview[^\n]*\n+([\s\S]+?)(?=\n##|$)/i);
+          if (overviewMatch) {
+            const text = overviewMatch[1].replace(/\*\*/g,'').replace(/[*_`]/g,'').replace(/\n+/g,' ').trim();
+            dayOverviews[d.day] = text.slice(0, 240) + (text.length > 240 ? '…' : '');
           }
+          // Store full deep-dive for the drawer
+          const idx = tripDays.findIndex(t => t.day === d.day);
+          if (idx >= 0) tripDays[idx].fullDive = raw;
+          buildDayCards(tripDays);
         }
-      } catch (e) {
-        // Silently skip failed days
-      }
-      completed++;
-      // Small delay between calls to avoid rate limiting
-      await new Promise(r => setTimeout(r, 400));
+      } catch (e) { /* silently skip */ }
+      await new Promise(r => setTimeout(r, 500));
     }
     lbl.textContent = originalLabel;
   }
