@@ -1195,15 +1195,10 @@
   function confirmUpload() {
     if (!pendingDocContent) return;
     docContent = pendingDocContent;
-    const parsed = parseRefDoc(docContent);
-    // Update upload button to show loaded state
+    parseRefDoc(docContent);
     const btn = document.querySelector('.upload-ref-btn');
-    const title = document.getElementById('modalUploadTitle').textContent;
-    btn.textContent = `✓ ${title}`;
-    btn.classList.add('loaded');
-    // Update home screen upload card too
-    document.getElementById('uploadCard').classList.add('loaded');
-    document.getElementById('uploadStatus').textContent = `✓ ${title} · ${(pendingDocText.length/1000).toFixed(1)}k chars${parsed ? ' · params loaded ✓' : ''}`;
+    const fileTitle = document.getElementById('modalUploadTitle').textContent;
+    if (btn) { btn.textContent = `✓ ${fileTitle}`; btn.classList.add('loaded'); }
     document.getElementById('statDoc').textContent = '1';
     refreshHomeCards();
     document.getElementById('uploadModal').classList.remove('open');
@@ -1242,23 +1237,7 @@
     return found;
   }
 
-  document.getElementById('docUpload').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const status = document.getElementById('uploadStatus');
-    const card = document.getElementById('uploadCard');
-    status.textContent = 'Reading…';
-    try {
-      let text = file.name.endsWith('.docx') ? await readDocx(file) : await file.text();
-      docContent = text.slice(0, 14000);
-      card.classList.add('loaded');
-      const parsed = parseRefDoc(docContent);
-      status.textContent = `✓ ${file.name} · ${(text.length/1000).toFixed(1)}k chars${parsed ? ' · params loaded ✓' : ''}`;
-      document.getElementById('statDoc').textContent = '1';
-    } catch(err) {
-      status.textContent = `Error: ${err.message}`;
-    }
-  });
+  // docUpload listener removed — uploads now handled exclusively via the modal
 
   // ── DAY HINT ──
   function updateDayHint() {
