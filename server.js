@@ -49,7 +49,52 @@ app.post('/api/plan', async (req, res) => {
   }
 });
 
-// Fallback to index.html for any unmatched route
+// Google Drive proxy — bypasses browser CORS restrictions
+app.get('/api/gdrive', async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'Missing url parameter' });
+
+  // Only allow Google domains
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname.endsWith('google.com')) {
+      return res.status(400).json({ error: 'Only Google Drive/Docs URLs are supported' });
+    }
+  } catch {
+    return res.status(400).json({ error: 'Invalid URL' });
+  }
+
+  try {
+    const upstream = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; OverlandPlanner/1.0)',
+        'Accept': 'text/plain,text/html,*/*',
+      },
+      redirect: 'follow',
+    });
+
+    if (!upstream.ok) {
+      return res.status(upstream.status).json({
+        error: `Google returned ${upstream.status}. Make sure the doc is set to "Anyone with the link can view".`
+      });
+    }
+
+    const text = await upstream.text();
+    // Strip any HTML if Google returned a page instead of plain text
+    const clean = text.replace(/<[^>]+>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    if (clean.length < 50) {
+      return res.status(403).json({ error: 'Document appears empty or access was denied. Set sharing to "Anyone with the link can view".' });
+    }
+
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(clean);
+  } catch (err) {
+    console.error('Drive proxy error:', err);
+    res.status(500).json({ error: 'Failed to fetch from Google Drive: ' + err.message });
+  }
+});
+
+
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'public', 'index.html'));
 });

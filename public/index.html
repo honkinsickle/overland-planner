@@ -4,632 +4,1069 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Claud v1.1 — Overland Planner</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
-      --bg:       #161614;
-      --bg2:      #1E1E1B;
-      --surface:  #242421;
-      --surface2: #2C2C28;
-      --surface3: #363632;
-      --orange:   #E8720C;
-      --orange2:  #F5A623;
-      --green:    #4CAF77;
-      --red:      #E05252;
-      --blue:     #5B9BD5;
-      --text:     #F0EDE8;
-      --text2:    #A8A49E;
-      --text3:    #5A5A56;
-      --border:   rgba(255,255,255,0.07);
-      --border2:  rgba(255,255,255,0.12);
+      --bg:      #161614;
+      --bg2:     #1E1E1B;
+      --surface: #242421;
+      --sf2:     #2C2C28;
+      --sf3:     #363632;
+      --orange:  #E8720C;
+      --orange2: #F5A623;
+      --green:   #4CAF77;
+      --red:     #E05252;
+      --blue:    #5B9BD5;
+      --text:    #F0EDE8;
+      --text2:   #A8A49E;
+      --text3:   #5A5A56;
+      --border:  rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.13);
     }
-    html { font-size: 16px; background: var(--bg); }
-    body {
-      background: var(--bg);
-      font-family: 'Outfit', sans-serif;
-      color: var(--text);
-      min-height: 100vh;
-      padding-bottom: 90px;
-      overscroll-behavior: none;
-    }
+    html { background: var(--bg); }
+    body { background: var(--bg); font-family: 'Outfit', sans-serif; color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-    /* ── HEADER ── */
-    .hdr {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 16px 12px;
-      position: sticky; top: 0; z-index: 200;
+    /* ── APP SHELL ── */
+    .app-shell { display: flex; flex-direction: column; height: 100vh; max-width: 600px; margin: 0 auto; }
+
+    /* ── TOP HEADER ── */
+    .top-hdr {
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 14px 16px 10px; flex-shrink: 0;
     }
-    .hdr-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
-    .hdr-step { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--orange); letter-spacing: 2px; text-transform: uppercase; }
-    .hdr-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
-    .hdr-sub { font-size: 11px; color: var(--text2); letter-spacing: 0.3px; font-family: 'JetBrains Mono', monospace; }
-    .hdr-badge { background: var(--orange); color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; padding: 4px 9px; border-radius: 20px; }
+    .top-hdr-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+    .top-step { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--orange); letter-spacing: 2px; text-transform: uppercase; }
+    .top-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .top-badge { background: var(--orange); color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; padding: 4px 10px; border-radius: 20px; }
+    .top-sub { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); }
 
     /* ── STATS BAR ── */
-    .stats-bar {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 10px 0;
-    }
-    .stat { text-align: center; padding: 0 4px; border-right: 1px solid var(--border); }
+    .stats-bar { display: grid; grid-template-columns: repeat(4,1fr); background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .stat { text-align: center; padding: 9px 4px; border-right: 1px solid var(--border); }
     .stat:last-child { border-right: none; }
-    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 4px; }
-    .stat-val.orange { color: var(--orange); }
-    .stat-val.red { color: var(--red); }
-    .stat-val.green { color: var(--green); }
-    .stat-lbl { font-size: 9px; color: var(--text3); letter-spacing: 1.2px; text-transform: uppercase; font-weight: 500; }
+    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 3px; }
+    .stat-val.or { color: var(--orange); }
+    .stat-val.rd { color: var(--red); }
+    .stat-val.gr { color: var(--green); }
+    .stat-lbl { font-size: 9px; color: var(--text3); letter-spacing: 1.2px; text-transform: uppercase; }
 
-    /* ── FILTERS ── */
-    .filter-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 10px 14px; background: var(--bg2); border-bottom: 1px solid var(--border); }
-    .filter-wrap::-webkit-scrollbar { display: none; }
-    .filter-row { display: flex; gap: 8px; width: max-content; }
-    .pill {
+    /* ── NAV TABS ── */
+    .nav-tabs { background: var(--bg2); border-bottom: 1px solid var(--border2); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-shrink: 0; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-row { display: flex; width: max-content; padding: 8px 12px; gap: 6px; }
+    .nav-tab {
       display: flex; align-items: center; gap: 6px;
-      background: var(--surface); border: 1px solid var(--border2);
-      color: var(--text2); font-size: 12px; font-weight: 500;
-      padding: 7px 14px; border-radius: 20px; cursor: pointer;
-      white-space: nowrap; transition: all 0.15s; flex-shrink: 0;
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+      color: var(--text2); background: transparent; border: 1px solid var(--border2);
+      padding: 7px 14px; border-radius: 20px; cursor: pointer; white-space: nowrap;
+      transition: all 0.15s; flex-shrink: 0;
     }
-    .pill:active { transform: scale(0.96); }
-    .pill.active { background: var(--orange); border-color: var(--orange); color: #fff; }
-    .pill .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .dot-orange { background: var(--orange); }
-    .dot-green  { background: var(--green); }
-    .dot-red    { background: var(--red); }
-    .dot-blue   { background: var(--blue); }
-    .dot-white  { background: var(--text); }
+    .nav-tab:active { transform: scale(0.96); }
+    .nav-tab.active { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 600; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .d-or { background: var(--orange); }
+    .d-bl { background: var(--blue); }
+    .d-gr { background: var(--green); }
+    .d-rd { background: var(--red); }
 
-    /* ── SCROLL BODY ── */
-    .scroll-body { padding: 12px 14px; }
+    /* ── SCREENS ── */
+    .screens { flex: 1; overflow: hidden; position: relative; }
+    .screen { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 14px 100px; display: none; }
+    .screen.active { display: block; }
 
     /* ── SECTION LABEL ── */
-    .section-lbl {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px; color: var(--text3); letter-spacing: 2px;
-      text-transform: uppercase; padding: 0 2px;
-      margin: 16px 0 8px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .section-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .sec-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin: 16px 0 8px; display: flex; align-items: center; gap: 8px; }
+    .sec-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .sec-lbl:first-child { margin-top: 4px; }
 
-    /* ── UPLOAD CARD ── */
-    .upload-card {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 12px;
-      padding: 18px;
-      text-align: center;
-      position: relative;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-    .upload-card.has-file { border-color: var(--green); }
-    .upload-card input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .upload-icon { font-size: 28px; margin-bottom: 8px; }
-    .upload-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-    .upload-sub { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
-    .upload-status { font-size: 11px; color: var(--green); margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 500; min-height: 14px; }
-
-    /* ── PARAM CARD ── */
-    .param-card {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .param-row {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 6px;
-    }
-    .param-row:last-child { border-bottom: none; }
-    .param-row.double { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; padding: 0; }
-    .param-half { padding: 12px 14px; border-right: 1px solid var(--border); }
-    .param-half:last-child { border-right: none; }
-    .param-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
-    input[type=text], input[type=date], input[type=number], textarea {
+    /* ── CARDS ── */
+    .card { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+    .card-row { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .card-row:last-child { border-bottom: none; }
+    .card-row.double { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 0; }
+    .card-half { padding: 12px 14px; }
+    .card-half:first-child { border-right: 1px solid var(--border); }
+    .field-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+    input[type=text], input[type=number], textarea {
       width: 100%; background: transparent; border: none; outline: none;
-      font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500;
-      color: var(--text); padding: 0; -webkit-appearance: none;
+      font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 500;
+      color: var(--text); -webkit-appearance: none;
     }
-    input[type=date] { color-scheme: dark; }
     textarea { resize: none; min-height: 52px; line-height: 1.5; font-size: 13px; }
     input::placeholder, textarea::placeholder { color: var(--text3); }
 
-    /* ── MODE CARDS (timeline style) ── */
-    .mode-list { display: flex; flex-direction: column; gap: 8px; }
-    .mode-card {
-      background: var(--surface);
-      border: 1.5px solid var(--border2);
-      border-radius: 12px;
-      padding: 14px 14px 14px 16px;
-      cursor: pointer;
-      display: flex; align-items: center; gap: 14px;
-      transition: border-color 0.15s, background 0.15s;
-      position: relative;
-      overflow: hidden;
-    }
-    .mode-card.selected { border-color: var(--orange); background: rgba(232,114,12,0.08); }
-    .mode-card:active { transform: scale(0.99); }
-    .mode-left-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); border-radius: 12px 0 0 12px; transition: background 0.15s; }
-    .mode-card.selected .mode-left-bar { background: var(--orange); }
-    .mode-emoji { font-size: 20px; flex-shrink: 0; }
-    .mode-info { flex: 1; min-width: 0; }
-    .mode-name { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.2; margin-bottom: 2px; }
-    .mode-desc { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
-    .mode-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; letter-spacing: 1px; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; }
-    .tag-orange { background: rgba(232,114,12,0.15); color: var(--orange); border: 1px solid rgba(232,114,12,0.3); }
-    .tag-green  { background: rgba(76,175,119,0.15); color: var(--green);  border: 1px solid rgba(76,175,119,0.3); }
-    .tag-blue   { background: rgba(91,155,213,0.15); color: var(--blue);   border: 1px solid rgba(91,155,213,0.3); }
-    .tag-red    { background: rgba(224,82,82,0.15);  color: var(--red);    border: 1px solid rgba(224,82,82,0.3); }
+    /* ── UPLOAD ── */
+    .upload-card { background: var(--surface); border: 1.5px dashed var(--border2); border-radius: 12px; padding: 20px 16px; text-align: center; position: relative; cursor: pointer; transition: all 0.15s; margin-bottom: 10px; }
+    .upload-card.loaded { border-color: var(--green); border-style: solid; }
+    .upload-card input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { font-size: 26px; margin-bottom: 6px; }
+    .upload-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .upload-hint { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+    .upload-status { font-size: 11px; color: var(--green); margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 500; min-height: 14px; }
 
-    /* ── PHASE INPUT ── */
-    .phase-extra {
-      display: none; margin-top: 10px;
-      background: var(--surface); border: 1px solid var(--border2);
-      border-radius: 10px; overflow: hidden;
-    }
-    .phase-extra.show { display: block; }
-    .phase-extra .param-lbl { padding: 10px 14px 0; }
-    .phase-extra input { padding: 6px 14px 12px; }
+    /* ── SCREEN HERO ── */
+    .screen-hero { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 18px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; }
+    .hero-emoji { font-size: 32px; flex-shrink: 0; }
+    .hero-title { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 3px; }
+    .hero-desc { font-size: 12px; color: var(--text2); font-family: 'JetBrains Mono', monospace; line-height: 1.4; }
+    .hero-tag { display: inline-block; margin-top: 6px; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; letter-spacing: 1px; padding: 3px 9px; border-radius: 20px; }
+    .ht-or { background: rgba(232,114,12,0.15); color: var(--orange); border: 1px solid rgba(232,114,12,0.3); }
+    .ht-bl { background: rgba(91,155,213,0.15); color: var(--blue); border: 1px solid rgba(91,155,213,0.3); }
+    .ht-gr { background: rgba(76,175,119,0.15); color: var(--green); border: 1px solid rgba(76,175,119,0.3); }
+    .ht-rd { background: rgba(224,82,82,0.15); color: var(--red); border: 1px solid rgba(224,82,82,0.3); }
 
-    /* ── BOTTOM BAR ── */
-    .bottom-bar {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-      background: var(--bg2);
-      border-top: 1px solid var(--border2);
-      padding: 12px 14px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    /* ── INFO ROWS ── */
+    .info-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+    .info-val { font-size: 13px; font-weight: 500; color: var(--text); text-align: right; max-width: 60%; }
+    .info-val.empty { color: var(--text3); font-style: italic; font-weight: 400; }
+
+    /* ── DAY INPUT (Day Dive screen) ── */
+    .day-input-wrap { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 20px; margin-bottom: 10px; text-align: center; }
+    .day-big-input {
+      width: 100%; background: var(--sf2); border: 2px solid var(--border2);
+      border-radius: 10px; padding: 16px; font-family: 'JetBrains Mono', monospace;
+      font-size: 42px; font-weight: 600; color: var(--orange); outline: none;
+      text-align: center; letter-spacing: 4px; -webkit-appearance: none;
+      transition: border-color 0.15s; margin-bottom: 8px;
     }
-    .btn-gen {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      width: 100%; background: var(--orange); color: #fff;
-      font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px;
-      letter-spacing: 0.5px; border: none; border-radius: 10px;
-      padding: 16px; cursor: pointer; transition: all 0.15s;
-      -webkit-appearance: none;
-    }
-    .btn-gen:active { background: #C45E00; transform: scale(0.99); }
-    .btn-gen:disabled { opacity: 0.45; }
-    .btn-sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); text-align: center; margin-top: 6px; letter-spacing: 1px; text-transform: uppercase; }
-    .spinner { width: 17px; height: 17px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .day-big-input:focus { border-color: var(--orange); }
+    .day-hint { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); }
+    .day-hint.found { color: var(--green); }
+
+    /* ── INSTRUCTIONS LIST ── */
+    .inst-list { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+    .inst-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .inst-item:last-child { border-bottom: none; }
+    .inst-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--orange); flex-shrink: 0; padding-top: 1px; }
+    .inst-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .inst-text strong { color: var(--text); font-weight: 600; }
 
     /* ── ERROR ── */
-    .error-box {
-      display: none; background: rgba(224,82,82,0.1); border: 1px solid rgba(224,82,82,0.4);
-      border-radius: 10px; padding: 12px 14px; color: var(--red);
-      font-size: 13px; line-height: 1.5; margin-bottom: 10px;
-      font-family: 'JetBrains Mono', monospace;
-    }
+    .err-box { display: none; background: rgba(224,82,82,0.1); border: 1px solid rgba(224,82,82,0.4); border-radius: 10px; padding: 12px 14px; color: var(--red); font-size: 12px; line-height: 1.5; margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
 
     /* ── OUTPUT ── */
-    .output-wrap { display: none; }
-    .output-hdr {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 11px 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      border-bottom: none;
-      border-radius: 12px 12px 0 0;
-    }
-    .output-hdr-left { display: flex; align-items: center; gap: 8px; }
-    .output-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
-    .output-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2); letter-spacing: 1.5px; text-transform: uppercase; }
-    .copy-btn {
-      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
-      color: var(--text2); background: var(--surface3); border: 1px solid var(--border2);
-      border-radius: 6px; padding: 5px 12px; cursor: pointer; letter-spacing: 0.5px;
-    }
-    .copy-btn:active { background: var(--surface); }
-    .output-body {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 0 0 12px 12px;
-      padding: 16px 14px;
-      max-height: 60vh; overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      font-size: 13px; line-height: 1.7;
-    }
-    .output-body.csv { font-family: 'JetBrains Mono', monospace; font-size: 10px; white-space: pre; overflow-x: auto; }
+    .out-wrap { display: none; margin-top: 4px; }
+    .out-hdr { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--sf2); border: 1px solid var(--border2); border-bottom: none; border-radius: 12px 12px 0 0; }
+    .out-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); margin-right: 8px; }
+    .out-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2); letter-spacing: 1.5px; text-transform: uppercase; display: flex; align-items: center; }
+    .copy-btn { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; color: var(--text2); background: var(--sf3); border: 1px solid var(--border2); border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+    .out-body { background: var(--surface); border: 1px solid var(--border2); border-radius: 0 0 12px 12px; padding: 16px 14px; font-size: 13px; line-height: 1.7; overflow-x: auto; }
+    .out-body.csv { font-family: 'JetBrains Mono', monospace; font-size: 10px; white-space: pre; }
+    .out-body h1 { font-size: 17px; font-weight: 700; color: var(--text); margin: 1rem 0 .4rem; }
+    .out-body h2 { font-size: 14px; font-weight: 600; color: var(--orange); margin: .9rem 0 .4rem; border-bottom: 1px solid rgba(232,114,12,0.2); padding-bottom: 4px; }
+    .out-body h3 { font-size: 11px; font-weight: 600; color: var(--text2); margin: .7rem 0 .3rem; font-family: 'JetBrains Mono', monospace; letter-spacing: .5px; text-transform: uppercase; }
+    .out-body p { margin-bottom: .5rem; color: var(--text2); }
+    .out-body p strong, .out-body strong { color: var(--text); font-weight: 600; }
+    .out-body ul, .out-body ol { padding-left: 1.2rem; margin: .4rem 0; }
+    .out-body li { margin-bottom: 4px; color: var(--text2); }
+    .out-body li::marker { color: var(--orange); }
+    .out-body code { background: var(--sf2); color: var(--orange2); padding: 1px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+    .out-body hr { border: none; border-top: 1px solid var(--border2); margin: 1rem 0; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: .75rem 0; border-radius: 8px; border: 1px solid var(--border2); }
+    .out-body table { border-collapse: collapse; font-size: 11px; min-width: 500px; width: 100%; }
+    .out-body th { background: var(--sf3); color: var(--text2); font-weight: 600; text-align: left; padding: 8px 10px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border2); }
+    .out-body td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text2); }
+    .out-body tr:last-child td { border-bottom: none; }
 
-    /* Output markdown */
-    .output-body h1 { font-size: 17px; font-weight: 700; color: var(--text); margin: 1rem 0 0.4rem; }
-    .output-body h2 { font-size: 14px; font-weight: 600; color: var(--orange); margin: 0.9rem 0 0.4rem; border-bottom: 1px solid rgba(232,114,12,0.2); padding-bottom: 5px; }
-    .output-body h3 { font-size: 12px; font-weight: 600; color: var(--text2); margin: 0.7rem 0 0.3rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase; }
-    .output-body p { margin-bottom: 0.5rem; color: var(--text2); }
-    .output-body p strong { color: var(--text); }
-    .output-body ul, .output-body ol { padding-left: 1.2rem; margin: 0.4rem 0; }
-    .output-body li { margin-bottom: 4px; color: var(--text2); }
-    .output-body li::marker { color: var(--orange); }
-    .output-body strong { color: var(--text); font-weight: 600; }
-    .output-body code { background: var(--surface2); color: var(--orange2); padding: 1px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
-    .output-body hr { border: none; border-top: 1px solid var(--border2); margin: 1rem 0; }
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0.75rem 0; border-radius: 8px; border: 1px solid var(--border2); }
-    .output-body table { border-collapse: collapse; font-size: 11px; min-width: 500px; width: 100%; }
-    .output-body th { background: var(--surface3); color: var(--text2); font-weight: 600; text-align: left; padding: 8px 10px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border2); }
-    .output-body td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text2); }
-    .output-body tr:last-child td { border-bottom: none; }
-    .output-body tr:hover td { background: rgba(255,255,255,0.02); }
+    /* ── BOTTOM GENERATE BAR ── */
+    .gen-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: var(--bg2); border-top: 1px solid var(--border2); padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 300; }
+    .gen-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: var(--orange); color: #fff; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: .3px; border: none; border-radius: 10px; padding: 16px; cursor: pointer; transition: background .15s; -webkit-appearance: none; }
+    .gen-btn:active { background: #C45E00; }
+    .gen-btn:disabled { opacity: .45; }
+    .gen-sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); text-align: center; margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
+    .spinner { width: 17px; height: 17px; border: 2.5px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* ── CREATE TRIP ── */
+    .create-hero { text-align: center; padding: 20px 16px 16px; margin-bottom: 4px; }
+    .create-hero-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .create-hero-sub { font-size: 12px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+    .create-step { display: flex; align-items: center; gap: 10px; margin: 16px 0 8px; }
+    .step-badge { background: var(--orange); color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .step-title { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 0.3px; }
+    .style-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 10px; }
+    .style-chip { background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 6px; text-align: center; font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.15s; line-height: 1.4; }
+    .style-chip:active { transform: scale(0.96); }
+    .style-chip.on { background: rgba(232,114,12,0.12); border-color: var(--orange); color: var(--orange); font-weight: 600; }
+    .event-row { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; position: relative; }
+    .event-row-top { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+    .event-field { display: flex; flex-direction: column; gap: 4px; }
+    .event-remove { position: absolute; top: 10px; right: 12px; background: rgba(224,82,82,0.15); border: none; color: var(--red); font-size: 16px; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: monospace; }
+    .add-event-btn { background: var(--surface); border: 1.5px dashed var(--border2); border-radius: 10px; padding: 13px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; margin-bottom: 10px; transition: all 0.15s; }
+    .add-event-btn:active { border-color: var(--orange); color: var(--orange); }
+    /* ── UPLOAD REF BUTTON ── */
+    .upload-ref-btn {
+      margin-top: 14px; display: inline-flex; align-items: center; gap: 8px;
+      background: var(--sf2); border: 1.5px solid var(--border2);
+      color: var(--text2); font-family: 'Outfit', sans-serif; font-size: 13px;
+      font-weight: 600; padding: 10px 18px; border-radius: 20px; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .upload-ref-btn:active { border-color: var(--orange); color: var(--orange); transform: scale(0.97); }
+    .upload-ref-btn.loaded { border-color: var(--green); color: var(--green); }
 
-    /* Scrollbar for output */
-    .output-body::-webkit-scrollbar { width: 4px; }
-    .output-body::-webkit-scrollbar-track { background: transparent; }
-    .output-body::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
-    /* ── DAY DIVE MODAL ── */
+    /* ── MODAL ── */
     .modal-overlay {
       display: none; position: fixed; inset: 0; z-index: 500;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
       align-items: flex-end; justify-content: center;
-      padding: 0 0 env(safe-area-inset-bottom, 0px);
     }
     .modal-overlay.open { display: flex; }
     .modal-box {
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      border-radius: 20px 20px 0 0;
-      width: 100%; max-width: 600px;
-      padding: 24px 20px 32px;
-      animation: slideUp 0.25s ease;
+      background: var(--sf2); border: 1px solid var(--border2);
+      border-radius: 20px 20px 0 0; width: 100%; max-width: 600px;
+      padding: 24px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+      animation: slideUp 0.25s cubic-bezier(0.32,0.72,0,1);
     }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .modal-hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
-    .modal-icon { font-size: 28px; }
+    .modal-hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
     .modal-title { font-size: 18px; font-weight: 700; color: var(--text); }
-    .modal-sub { font-size: 11px; color: var(--orange); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; margin-top: 2px; }
-    .modal-body { margin-bottom: 20px; }
-    .modal-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
-    .modal-input {
-      width: 100%; background: var(--surface3); border: 1.5px solid var(--border2);
-      border-radius: 10px; padding: 14px 16px; font-family: 'JetBrains Mono', monospace;
-      font-size: 28px; font-weight: 600; color: var(--orange); outline: none;
-      -webkit-appearance: none; text-align: center; letter-spacing: 2px;
-      transition: border-color 0.15s;
+    .modal-sub { font-size: 11px; color: var(--orange); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+
+    .modal-upload-zone {
+      background: var(--surface); border: 2px dashed var(--border2);
+      border-radius: 12px; padding: 24px 16px; text-align: center;
+      cursor: pointer; transition: all 0.15s; margin-bottom: 16px;
     }
-    .modal-input:focus { border-color: var(--orange); }
-    .modal-hint { font-size: 11px; color: var(--text3); text-align: center; margin-top: 8px; font-family: 'JetBrains Mono', monospace; }
-    .modal-hint.found { color: var(--green); }
+    .modal-upload-zone:active { border-color: var(--orange); }
+    .modal-upload-zone.loaded { border-color: var(--green); border-style: solid; }
+    .modal-upload-icon { font-size: 30px; margin-bottom: 8px; }
+    .modal-upload-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .modal-upload-hint { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+    .modal-upload-status { font-size: 11px; color: var(--green); margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 500; min-height: 14px; }
+
+    .modal-what-loads { background: var(--surface); border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; }
+    .modal-what-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .modal-what-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); padding: 4px 0; }
+    .modal-what-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+
     .modal-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
-    .modal-cancel { background: var(--surface3); border: 1px solid var(--border2); color: var(--text2); font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; border-radius: 10px; padding: 14px; cursor: pointer; }
+    .modal-cancel { background: var(--sf3); border: 1px solid var(--border2); color: var(--text2); font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; border-radius: 10px; padding: 14px; cursor: pointer; }
     .modal-confirm { background: var(--orange); border: none; color: #fff; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; border-radius: 10px; padding: 14px; cursor: pointer; transition: background 0.15s; }
     .modal-confirm:active { background: #C45E00; }
-    .modal-confirm:disabled { opacity: 0.4; }
+    .modal-confirm:disabled { opacity: 0.35; cursor: not-allowed; }
+    .modal-divider { display: flex; align-items: center; gap: 10px; margin: 14px 0 12px; }
+    .modal-divider::before, .modal-divider::after { content: ''; flex: 1; height: 1px; background: var(--border2); }
+    .modal-divider span { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+
+    .modal-gdrive-wrap { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1.5px solid var(--border2); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; transition: border-color 0.15s; }
+    .modal-gdrive-wrap:focus-within { border-color: var(--blue); }
+    .modal-gdrive-wrap.valid { border-color: var(--green); }
+    .modal-gdrive-wrap.error { border-color: var(--red); }
+    .modal-gdrive-icon { flex-shrink: 0; display: flex; align-items: center; }
+    .modal-gdrive-input { flex: 1; background: transparent; border: none; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); min-width: 0; }
+    .modal-gdrive-input::placeholder { color: var(--text3); }
+    .modal-gdrive-fetch { background: var(--blue); border: none; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; flex-shrink: 0; transition: background 0.15s; letter-spacing: 0.5px; }
+    .modal-gdrive-fetch:active { background: #3a7abf; }
+    .modal-gdrive-fetch:disabled { opacity: 0.35; cursor: not-allowed; }
+    .modal-gdrive-fetch.loading { opacity: 0.7; }
+    .modal-gdrive-status { font-family: 'JetBrains Mono', monospace; font-size: 11px; min-height: 16px; margin-bottom: 14px; padding: 0 2px; }
+    .modal-gdrive-status.ok   { color: var(--green); }
+    .modal-gdrive-status.err  { color: var(--red); }
+    .modal-gdrive-status.info { color: var(--text3); }
   </style>
 </head>
 <body>
+<div class="app-shell">
 
-<!-- HEADER -->
-<div class="hdr">
-  <div class="hdr-top">
-    <div>
-      <div class="hdr-step">Claud v1.1 · Expedition Planning</div>
-      <div class="hdr-title">Waypoints</div>
-    </div>
-    <div class="hdr-badge">GX470</div>
-  </div>
-  <div class="hdr-sub"><span id="hdrRoute">— → —</span> &nbsp;·&nbsp; <span id="hdrDays">— days</span> &nbsp;·&nbsp; <span id="hdrDate">—</span></div>
-</div>
-
-<!-- STATS BAR -->
-<div class="stats-bar">
-  <div class="stat">
-    <div class="stat-val orange" id="statDays">—</div>
-    <div class="stat-lbl">Days</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val" id="statMiles">—</div>
-    <div class="stat-lbl">Est. Miles</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val red" id="statSignal">—</div>
-    <div class="stat-lbl">No Signal</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val green" id="statDoc">0</div>
-    <div class="stat-lbl">Imported</div>
-  </div>
-</div>
-
-<!-- FILTER PILLS -->
-<div class="filter-wrap">
-  <div class="filter-row">
-    <div class="pill active" onclick="setFilter(this,'overview')">All</div>
-    <div class="pill" onclick="setFilter(this,'daily')"><span class="dot dot-orange"></span> Daily Table</div>
-    <div class="pill" onclick="setFilter(this,'csv')"><span class="dot dot-blue"></span> MyMaps CSV</div>
-    <div class="pill" onclick="setFilter(this,'daydive')"><span class="dot dot-orange"></span> Day Dive</div>
-    <div class="pill" onclick="setFilter(this,'permits')"><span class="dot dot-red"></span> Permits</div>
-    <div class="pill" onclick="setFilter(this,'food')"><span class="dot dot-green"></span> Food Guide</div>
-  </div>
-</div>
-
-<!-- SCROLL BODY -->
-<div class="scroll-body">
-
-  <!-- REFERENCE DOC -->
-  <div class="section-lbl">Reference Document</div>
-  <div class="upload-card" id="uploadCard">
-    <input type="file" id="docUpload" accept=".txt,.md,.csv,.docx"/>
-    <div class="upload-icon">📂</div>
-    <div class="upload-title">Upload Events &amp; Food Doc</div>
-    <div class="upload-sub">.docx · .txt · .md &nbsp;·&nbsp; tap to browse</div>
-    <div class="upload-status" id="uploadStatus"></div>
-  </div>
-
-  <!-- TRIP PARAMS -->
-  <div class="section-lbl">Trip Parameters</div>
-  <div class="param-card">
-    <div class="param-row double">
-      <div class="param-half">
-        <div class="param-lbl">Departure</div>
-        <input type="text" id="departDate" placeholder="Enter date" oninput="syncHeader()"/>
+  <!-- TOP HEADER -->
+  <div class="top-hdr">
+    <div class="top-hdr-row">
+      <div>
+        <div class="top-step">Claud v1.1 · Expedition Planning</div>
+        <div class="top-title">Waypoints</div>
       </div>
-      <div class="param-half">
-        <div class="param-lbl">Duration</div>
-        <input type="number" id="duration" min="14" max="180" placeholder="Enter days" oninput="syncHeader()"/>
-      </div>
+      <div class="top-badge">GX470</div>
     </div>
-    <div class="param-row">
-      <div class="param-lbl">Start Location</div>
-      <input type="text" id="startLoc" placeholder="Enter start location" oninput="syncHeader()"/>
-    </div>
-    <div class="param-row">
-      <div class="param-lbl">End Location</div>
-      <input type="text" id="endLoc" placeholder="Enter end location" oninput="syncHeader()"/>
-    </div>
-    <div class="param-row">
-      <div class="param-lbl">Special Instructions</div>
-      <textarea id="extraNotes" placeholder="e.g. Must be in Whitehorse by July 4 · Extra day at Denali…"></textarea>
+    <div class="top-sub"><span id="hdrRoute">— → —</span> &nbsp;·&nbsp; <span id="hdrDays">— days</span> &nbsp;·&nbsp; <span id="hdrDate">—</span></div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-val or" id="statDays">—</div><div class="stat-lbl">Days</div></div>
+    <div class="stat"><div class="stat-val" id="statMiles">—</div><div class="stat-lbl">Est. Miles</div></div>
+    <div class="stat"><div class="stat-val rd" id="statSignal">—</div><div class="stat-lbl">No Signal</div></div>
+    <div class="stat"><div class="stat-val gr" id="statDoc">0</div><div class="stat-lbl">Imported</div></div>
+  </div>
+
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <div class="nav-row">
+      <div class="nav-tab" onclick="goTo('create',this)" style="background:rgba(232,114,12,0.12);border-color:rgba(232,114,12,0.35);color:var(--orange);">+ New Trip</div>
+      <div class="nav-tab active" onclick="goTo('home',this)">Home</div>
+      <div class="nav-tab" onclick="goTo('daily',this)"><span class="nav-dot d-or"></span> Daily Table</div>
+      <div class="nav-tab" onclick="goTo('csv',this)"><span class="nav-dot d-bl"></span> MyMaps CSV</div>
+      <div class="nav-tab" onclick="goTo('daydive',this)"><span class="nav-dot d-or"></span> Day Dive</div>
+      <div class="nav-tab" onclick="goTo('permits',this)"><span class="nav-dot d-rd"></span> Permits</div>
+      <div class="nav-tab" onclick="goTo('food',this)"><span class="nav-dot d-gr"></span> Food Guide</div>
     </div>
   </div>
 
-  <!-- OUTPUT MODE -->
-  <div class="section-lbl">Output Mode</div>
-  <div class="mode-list">
-    <div class="mode-card selected" data-mode="overview" onclick="selectMode(this)">
-      <div class="mode-left-bar"></div>
-      <div class="mode-emoji">🗺️</div>
-      <div class="mode-info">
-        <div class="mode-name">Route Summary</div>
-        <div class="mode-desc">corridors · phases · food · logistics</div>
-      </div>
-      <div class="mode-tag tag-orange">FULL</div>
-    </div>
-    <div class="mode-card" data-mode="daily" onclick="selectMode(this)">
-      <div class="mode-left-bar"></div>
-      <div class="mode-emoji">📅</div>
-      <div class="mode-info">
-        <div class="mode-name">Daily Table</div>
-        <div class="mode-desc">day-by-day · stops · overnight</div>
-      </div>
-      <div class="mode-tag tag-orange">TABLE</div>
-    </div>
-    <div class="mode-card" data-mode="csv" onclick="selectMode(this)">
-      <div class="mode-left-bar"></div>
-      <div class="mode-emoji">📍</div>
-      <div class="mode-info">
-        <div class="mode-name">Google MyMaps CSV</div>
-        <div class="mode-desc">import-ready · lat/long · pins</div>
-      </div>
-      <div class="mode-tag tag-blue">CSV</div>
-    </div>
-    <div class="mode-card" data-mode="daydive" onclick="openDayModal()">
-      <div class="mode-left-bar"></div>
-      <div class="mode-emoji">🔍</div>
-      <div class="mode-info">
-        <div class="mode-name">Day Deep-Dive</div>
-        <div class="mode-desc">single day · section 04 · full detail</div>
-      </div>
-      <div class="mode-tag tag-orange">DAY</div>
-    </div>
-    <div class="mode-card" data-mode="permits" onclick="selectMode(this)">
-      <div class="mode-left-bar"></div>
-      <div class="mode-emoji">🛂</div>
-      <div class="mode-info">
-        <div class="mode-name">Permits &amp; Crossings</div>
-        <div class="mode-desc">border docs · passes · reservations</div>
-      </div>
-      <div class="mode-tag tag-red">REQUIRED</div>
-    </div>
-    <div class="mode-card" data-mode="food" onclick="selectMode(this)">
-      <div class="mode-left-bar"></div>
-      <div class="mode-emoji">🍽️</div>
-      <div class="mode-info">
-        <div class="mode-name">Food Guide</div>
-        <div class="mode-desc">regional must-eats · top picks ★</div>
-      </div>
-      <div class="mode-tag tag-green">EATS</div>
-    </div>
-  </div>
+  <!-- SCREENS -->
+  <div class="screens">
 
-  <!-- ERROR -->
-  <div class="error-box" id="errorBox"></div>
+    <!-- CREATE TRIP -->
+    <div class="screen" id="screen-create">
 
-  <!-- OUTPUT -->
-  <div class="output-wrap" id="outputWrap">
-    <div class="section-lbl" style="margin-top:20px;">Output</div>
-    <div class="output-hdr">
-      <div class="output-hdr-left">
-        <div class="output-dot"></div>
-        <div class="output-lbl" id="outputLbl">Route Summary</div>
+      <div class="create-hero">
+        <div style="font-size:28px;margin-bottom:8px;">🧭</div>
+        <div class="create-hero-title">New Trip</div>
+        <div class="create-hero-sub">Fill in the details below to build your overland plan</div>
+        <button class="upload-ref-btn" onclick="openUploadModal()">📂 Upload Reference Doc</button>
       </div>
-      <button class="copy-btn" onclick="copyOutput()">COPY</button>
+
+      <!-- STEP 1: Route -->
+      <div class="create-step">
+        <div class="step-badge">01</div>
+        <div class="step-title">Route</div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="field-lbl">Start Location</div>
+          <input type="text" id="c-startLoc" placeholder="e.g. Los Angeles, California" oninput="syncCreate()"/>
+        </div>
+        <div class="card-row">
+          <div class="field-lbl">End Location</div>
+          <input type="text" id="c-endLoc" placeholder="e.g. Deadhorse, Alaska" oninput="syncCreate()"/>
+        </div>
+      </div>
+
+      <!-- STEP 2: Dates -->
+      <div class="create-step">
+        <div class="step-badge">02</div>
+        <div class="step-title">Dates</div>
+      </div>
+      <div class="card">
+        <div class="card-row double">
+          <div class="card-half">
+            <div class="field-lbl">Departure Date</div>
+            <input type="text" id="c-departDate" placeholder="e.g. Jun 1, 2026" oninput="syncCreate()"/>
+          </div>
+          <div class="card-half">
+            <div class="field-lbl">Duration (days)</div>
+            <input type="number" id="c-duration" min="1" max="365" placeholder="80" oninput="syncCreate()"/>
+          </div>
+        </div>
+        <div class="card-row">
+          <div class="field-lbl">Return Date (optional)</div>
+          <input type="text" id="c-returnDate" placeholder="e.g. Aug 10, 2026"/>
+        </div>
+      </div>
+
+      <!-- STEP 3: Vehicle -->
+      <div class="create-step">
+        <div class="step-badge">03</div>
+        <div class="step-title">Vehicle</div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="field-lbl">Make / Model / Year</div>
+          <input type="text" id="c-vehicle" placeholder="e.g. 2004 Lexus GX470"/>
+        </div>
+        <div class="card-row double">
+          <div class="card-half">
+            <div class="field-lbl">Fuel Range (mi)</div>
+            <input type="number" id="c-fuelRange" placeholder="400"/>
+          </div>
+          <div class="card-half">
+            <div class="field-lbl">Group Size</div>
+            <input type="number" id="c-groupSize" min="1" max="10" placeholder="1–2"/>
+          </div>
+        </div>
+        <div class="card-row">
+          <div class="field-lbl">Build / Mods</div>
+          <input type="text" id="c-mods" placeholder="e.g. lift, armor, winch, fridge, dual battery"/>
+        </div>
+      </div>
+
+      <!-- STEP 4: Style -->
+      <div class="create-step">
+        <div class="step-badge">04</div>
+        <div class="step-title">Travel Style</div>
+      </div>
+      <div class="style-grid">
+        <div class="style-chip" data-val="dispersed camping" onclick="toggleChip(this)">⛺ Dispersed</div>
+        <div class="style-chip" data-val="photography" onclick="toggleChip(this)">📷 Photography</div>
+        <div class="style-chip" data-val="solitude" onclick="toggleChip(this)">🌲 Solitude</div>
+        <div class="style-chip" data-val="local food" onclick="toggleChip(this)">🍽️ Local Food</div>
+        <div class="style-chip" data-val="scenic routes" onclick="toggleChip(this)">🏔️ Scenic</div>
+        <div class="style-chip" data-val="minimalist" onclick="toggleChip(this)">🎒 Minimalist</div>
+        <div class="style-chip" data-val="remote adventure" onclick="toggleChip(this)">🛞 Remote</div>
+        <div class="style-chip" data-val="wildlife" onclick="toggleChip(this)">🐻 Wildlife</div>
+      </div>
+
+      <!-- STEP 5: Fixed Events -->
+      <div class="create-step">
+        <div class="step-badge">05</div>
+        <div class="step-title">Fixed Events ⚓</div>
+      </div>
+      <div id="events-list"></div>
+      <div class="add-event-btn" onclick="addEvent()">+ Add Fixed Event</div>
+
+      <!-- STEP 6: Avoid / Notes -->
+      <div class="create-step">
+        <div class="step-badge">06</div>
+        <div class="step-title">Avoid &amp; Notes</div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="field-lbl">Avoid</div>
+          <input type="text" id="c-avoid" placeholder="e.g. toll roads, rock-crawling, rushed driving"/>
+        </div>
+        <div class="card-row">
+          <div class="field-lbl">Special Instructions</div>
+          <textarea id="c-notes" placeholder="e.g. Must be in Whitehorse by July 4 · Extra days at Denali…"></textarea>
+        </div>
+        <div class="card-row">
+          <div class="field-lbl">Budget Level</div>
+          <input type="text" id="c-budget" placeholder="e.g. mid-range, dispersed camping preferred"/>
+        </div>
+      </div>
+
+      <!-- TRIP PREVIEW -->
+      <div class="sec-lbl" id="preview-lbl" style="display:none;">Trip Preview</div>
+      <div class="card" id="trip-preview" style="display:none;">
+        <div class="info-row"><div class="info-lbl">Route</div><div class="info-val" id="prev-route">—</div></div>
+        <div class="info-row"><div class="info-lbl">Departure</div><div class="info-val" id="prev-date">—</div></div>
+        <div class="info-row"><div class="info-lbl">Duration</div><div class="info-val" id="prev-dur">—</div></div>
+        <div class="info-row"><div class="info-lbl">Vehicle</div><div class="info-val" id="prev-veh">—</div></div>
+        <div class="info-row"><div class="info-lbl">Style</div><div class="info-val" id="prev-style">—</div></div>
+        <div class="info-row" id="prev-events-row"><div class="info-lbl">Fixed Events</div><div class="info-val" id="prev-events">None</div></div>
+      </div>
+
+      <div style="height:8px;"></div>
+      <div class="err-box" id="err-create"></div>
+      <div class="out-wrap" id="out-create">
+        <div class="out-hdr"><div class="out-lbl"><div class="out-dot"></div>Route Summary</div><button class="copy-btn" onclick="copyOut('body-create')">COPY</button></div>
+        <div class="out-body" id="body-create"></div>
+      </div>
     </div>
-    <div class="output-body" id="outputBody"></div>
-  </div>
 
-  <div style="height:20px;"></div>
-</div>
+    <!-- HOME -->
+    <div class="screen active" id="screen-home">
+      <div class="sec-lbl">Reference Document</div>
+      <div class="upload-card" id="uploadCard">
+        <input type="file" id="docUpload" accept=".docx,.txt,.md,.csv"/>
+        <div class="upload-icon">📂</div>
+        <div class="upload-title">Upload Reference Doc</div>
+        <div class="upload-hint">.docx · .txt · .md &nbsp;·&nbsp; tap to browse</div>
+        <div class="upload-status" id="uploadStatus"></div>
+      </div>
 
-<!-- DAY DIVE MODAL -->
-<div class="modal-overlay" id="dayModal" onclick="closeDayModal(event)">
+      <div class="sec-lbl">Trip Parameters</div>
+      <div class="card">
+        <div class="card-row double">
+          <div class="card-half">
+            <div class="field-lbl">Departure</div>
+            <input type="text" id="departDate" placeholder="Enter date" oninput="syncHeader()"/>
+          </div>
+          <div class="card-half">
+            <div class="field-lbl">Duration</div>
+            <input type="number" id="duration" min="1" max="365" placeholder="Days" oninput="syncHeader()"/>
+          </div>
+        </div>
+        <div class="card-row">
+          <div class="field-lbl">Start Location</div>
+          <input type="text" id="startLoc" placeholder="Enter start location" oninput="syncHeader()"/>
+        </div>
+        <div class="card-row">
+          <div class="field-lbl">End Location</div>
+          <input type="text" id="endLoc" placeholder="Enter end location" oninput="syncHeader()"/>
+        </div>
+        <div class="card-row">
+          <div class="field-lbl">Special Instructions</div>
+          <textarea id="extraNotes" placeholder="e.g. Must be in Whitehorse by July 4 · Extra day at Denali…"></textarea>
+        </div>
+      </div>
+
+      <div class="sec-lbl">Quick Actions</div>
+      <div class="card">
+        <div class="info-row" onclick="goToByName('daily')" style="cursor:pointer;">
+          <div class="info-lbl">📅 &nbsp;Daily Table</div>
+          <div style="color:var(--text3);font-size:18px;">›</div>
+        </div>
+        <div class="info-row" onclick="goToByName('csv')" style="cursor:pointer;">
+          <div class="info-lbl">📍 &nbsp;MyMaps CSV</div>
+          <div style="color:var(--text3);font-size:18px;">›</div>
+        </div>
+        <div class="info-row" onclick="goToByName('daydive')" style="cursor:pointer;">
+          <div class="info-lbl">🔍 &nbsp;Day Deep-Dive</div>
+          <div style="color:var(--text3);font-size:18px;">›</div>
+        </div>
+        <div class="info-row" onclick="goToByName('permits')" style="cursor:pointer;">
+          <div class="info-lbl">🛂 &nbsp;Permits &amp; Crossings</div>
+          <div style="color:var(--text3);font-size:18px;">›</div>
+        </div>
+        <div class="info-row" onclick="goToByName('food')" style="cursor:pointer;">
+          <div class="info-lbl">🍽️ &nbsp;Food Guide</div>
+          <div style="color:var(--text3);font-size:18px;">›</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAILY TABLE -->
+    <div class="screen" id="screen-daily">
+      <div class="screen-hero">
+        <div class="hero-emoji">📅</div>
+        <div>
+          <div class="hero-title">Daily Table</div>
+          <div class="hero-desc">full day-by-day · stops · overnights · miles</div>
+          <div class="hero-tag ht-or">TABLE</div>
+        </div>
+      </div>
+      <div class="sec-lbl">Trip Summary</div>
+      <div class="card" id="daily-summary">
+        <div class="info-row"><div class="info-lbl">Route</div><div class="info-val" id="ds-route">—</div></div>
+        <div class="info-row"><div class="info-lbl">Departure</div><div class="info-val" id="ds-date">—</div></div>
+        <div class="info-row"><div class="info-lbl">Duration</div><div class="info-val" id="ds-dur">—</div></div>
+      </div>
+      <div class="err-box" id="err-daily"></div>
+      <div class="out-wrap" id="out-daily">
+        <div class="out-hdr"><div class="out-lbl"><div class="out-dot"></div>Full Daily Itinerary</div><button class="copy-btn" onclick="copyOut('body-daily')">COPY</button></div>
+        <div class="out-body" id="body-daily"></div>
+      </div>
+    </div>
+
+    <!-- MYMAPS CSV -->
+    <div class="screen" id="screen-csv">
+      <div class="screen-hero">
+        <div class="hero-emoji">📍</div>
+        <div>
+          <div class="hero-title">MyMaps CSV</div>
+          <div class="hero-desc">google maps import · lat/long · one pin per day</div>
+          <div class="hero-tag ht-bl">CSV</div>
+        </div>
+      </div>
+      <div class="sec-lbl">Import Instructions</div>
+      <div class="inst-list">
+        <div class="inst-item"><div class="inst-num">01</div><div class="inst-text">Go to <strong>mymaps.google.com</strong> → Create New Map → Import on a layer</div></div>
+        <div class="inst-item"><div class="inst-num">02</div><div class="inst-text">Upload the CSV file, select <strong>Latitude</strong> and <strong>Longitude</strong> as location columns</div></div>
+        <div class="inst-item"><div class="inst-num">03</div><div class="inst-text">Select <strong>Title</strong> as the placemark label column</div></div>
+        <div class="inst-item"><div class="inst-num">04</div><div class="inst-text">Each pin shows as <strong>Day X | Location, STATE</strong></div></div>
+      </div>
+      <div class="err-box" id="err-csv"></div>
+      <div class="out-wrap" id="out-csv">
+        <div class="out-hdr"><div class="out-lbl"><div class="out-dot"></div>Google MyMaps CSV</div><button class="copy-btn" onclick="copyOut('body-csv')">COPY</button></div>
+        <div class="out-body csv" id="body-csv"></div>
+      </div>
+    </div>
+
+    <!-- DAY DIVE -->
+    <div class="screen" id="screen-daydive">
+      <div class="screen-hero">
+        <div class="hero-emoji">🔍</div>
+        <div>
+          <div class="hero-title">Day Deep-Dive</div>
+          <div class="hero-desc">single day · pulls from section 04 · full detail</div>
+          <div class="hero-tag ht-or">DAY</div>
+        </div>
+      </div>
+      <div class="sec-lbl">Select Day</div>
+      <div class="day-input-wrap">
+        <input type="number" class="day-big-input" id="dayNumber" min="1" max="365" placeholder="15" oninput="updateDayHint()"/>
+        <div class="day-hint" id="dayHint">Enter a day number from your itinerary</div>
+      </div>
+      <div class="err-box" id="err-daydive"></div>
+      <div class="out-wrap" id="out-daydive">
+        <div class="out-hdr"><div class="out-lbl"><div class="out-dot"></div><span id="daydive-lbl">Day Deep-Dive</span></div><button class="copy-btn" onclick="copyOut('body-daydive')">COPY</button></div>
+        <div class="out-body" id="body-daydive"></div>
+      </div>
+    </div>
+
+    <!-- PERMITS -->
+    <div class="screen" id="screen-permits">
+      <div class="screen-hero">
+        <div class="hero-emoji">🛂</div>
+        <div>
+          <div class="hero-title">Permits &amp; Crossings</div>
+          <div class="hero-desc">border docs · national park passes · reservations</div>
+          <div class="hero-tag ht-rd">REQUIRED</div>
+        </div>
+      </div>
+      <div class="sec-lbl">What's Covered</div>
+      <div class="inst-list">
+        <div class="inst-item"><div class="inst-num">→</div><div class="inst-text"><strong>Permits &amp; Reservations</strong> — park entries, campground bookings, ferry slots, timed entry</div></div>
+        <div class="inst-item"><div class="inst-num">→</div><div class="inst-text"><strong>Border Crossings</strong> — documents required, hours, remoteness, notes on fuel &amp; vehicle contents</div></div>
+      </div>
+      <div class="err-box" id="err-permits"></div>
+      <div class="out-wrap" id="out-permits">
+        <div class="out-hdr"><div class="out-lbl"><div class="out-dot"></div>Permits &amp; Crossings</div><button class="copy-btn" onclick="copyOut('body-permits')">COPY</button></div>
+        <div class="out-body" id="body-permits"></div>
+      </div>
+    </div>
+
+    <!-- FOOD GUIDE -->
+    <div class="screen" id="screen-food">
+      <div class="screen-hero">
+        <div class="hero-emoji">🍽️</div>
+        <div>
+          <div class="hero-title">Food Guide</div>
+          <div class="hero-desc">regional must-eats · local spots · top picks ★</div>
+          <div class="hero-tag ht-gr">EATS</div>
+        </div>
+      </div>
+      <div class="sec-lbl">What's Covered</div>
+      <div class="inst-list">
+        <div class="inst-item"><div class="inst-num">→</div><div class="inst-text"><strong>Hub-by-hub</strong> breakdown of 2–5 spots per major stop along the route</div></div>
+        <div class="inst-item"><div class="inst-num">→</div><div class="inst-text"><strong>What to order</strong>, vibe, timing tips, and must-try dishes marked ★</div></div>
+        <div class="inst-item"><div class="inst-num">→</div><div class="inst-text"><strong>Regional specialties</strong> section at the end for iconic dishes not to miss</div></div>
+      </div>
+      <div class="err-box" id="err-food"></div>
+      <div class="out-wrap" id="out-food">
+        <div class="out-hdr"><div class="out-lbl"><div class="out-dot"></div>Regional Food Guide</div><button class="copy-btn" onclick="copyOut('body-food')">COPY</button></div>
+        <div class="out-body" id="body-food"></div>
+      </div>
+    </div>
+
+  </div><!-- /screens -->
+</div><!-- /app-shell -->
+
+<!-- UPLOAD REFERENCE MODAL -->
+<div class="modal-overlay" id="uploadModal" onclick="closeUploadModal(event)">
   <div class="modal-box">
     <div class="modal-hdr">
-      <div class="modal-icon">🔍</div>
+      <div style="font-size:26px;">📂</div>
       <div>
-        <div class="modal-title">Day Deep-Dive</div>
-        <div class="modal-sub">Pulls from Section 04 · Full Itinerary</div>
+        <div class="modal-title">Reference Document</div>
+        <div class="modal-sub">Auto-fills trip params from your doc</div>
       </div>
     </div>
-    <div class="modal-body">
-      <div class="modal-lbl">Which day?</div>
-      <input type="number" id="dayNumber" min="1" max="180" placeholder="e.g. 15" class="modal-input"/>
-      <div class="modal-hint" id="dayHint">Enter a day number from your itinerary</div>
+
+    <div class="modal-upload-zone" id="modalUploadZone" onclick="document.getElementById('modalFileInput').click()">
+      <input type="file" id="modalFileInput" accept=".docx,.txt,.md,.csv" style="display:none;"/>
+      <div class="modal-upload-icon" id="modalUploadIcon">📄</div>
+      <div class="modal-upload-title" id="modalUploadTitle">Tap to browse</div>
+      <div class="modal-upload-hint">.docx · .txt · .md · .csv</div>
+      <div class="modal-upload-status" id="modalUploadStatus"></div>
     </div>
+
+    <div class="modal-what-loads">
+      <div class="modal-what-title">What gets loaded</div>
+      <div class="modal-what-row"><span class="modal-what-dot"></span>Start &amp; End Location</div>
+      <div class="modal-what-row"><span class="modal-what-dot"></span>Departure Date &amp; Duration</div>
+      <div class="modal-what-row"><span class="modal-what-dot"></span>Fixed Events ⚓</div>
+      <div class="modal-what-row"><span class="modal-what-dot"></span>Vehicle, Food &amp; Waypoint Notes</div>
+    </div>
+
+    <div class="modal-divider"><span>or paste a link</span></div>
+
+    <div class="modal-gdrive-wrap">
+      <div class="modal-gdrive-icon">
+        <svg width="16" height="16" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
+          <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
+          <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/>
+          <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/>
+          <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
+          <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/>
+          <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/>
+        </svg>
+      </div>
+      <input type="text" class="modal-gdrive-input" id="gdriveLink" placeholder="Paste Google Drive or Docs link…" oninput="validateDriveLink()"/>
+      <button class="modal-gdrive-fetch" id="gdriveFetchBtn" disabled onclick="fetchDriveDoc()">Fetch</button>
+    </div>
+    <div class="modal-gdrive-status" id="gdriveStatus"></div>
+
     <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeDayModal()">Cancel</button>
-      <button class="modal-confirm" onclick="confirmDayDive()">Generate →</button>
+      <button class="modal-cancel" onclick="closeUploadModal()">Cancel</button>
+      <button class="modal-confirm" id="modalConfirmBtn" disabled onclick="confirmUpload()">Load Doc →</button>
     </div>
   </div>
 </div>
 
-<!-- BOTTOM BAR -->
-<div class="bottom-bar">
-  <button class="btn-gen" id="genBtn" onclick="runPlanner()">
+<!-- GENERATE BAR -->
+<div class="gen-bar" id="genBar">
+  <button class="gen-btn" id="genBtn" onclick="runPlanner()">
     <span class="spinner" id="genSpinner" style="display:none;"></span>
-    <span id="genText">⚡ Generate Itinerary</span>
+    <span id="genText">⚡ Generate Route Summary</span>
   </button>
-  <div class="btn-sub" id="genSub">6 stops · 2 no-signal zones flagged</div>
+  <div class="gen-sub" id="genSub">upload reference doc to auto-fill parameters</div>
 </div>
 
 <script>
   let docContent = '';
-  let selectedMode = 'overview';
+  let currentScreen = 'home';
 
-  // Sync header stats from inputs
+  const SCREEN_LABELS = {
+    home:    '⚡ Generate Route Summary',
+    create:  '⚡ Generate from This Trip',
+    daily:   '⚡ Generate Daily Table',
+    csv:     '⚡ Generate MyMaps CSV',
+    daydive: '⚡ Generate Day Deep-Dive',
+    permits: '⚡ Generate Permits Report',
+    food:    '⚡ Generate Food Guide',
+  };
+
+  // ── NAVIGATION ──
+  function goTo(name, tabEl) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    if (tabEl) tabEl.classList.add('active');
+    currentScreen = name;
+    document.getElementById('genText').textContent = SCREEN_LABELS[name] || '⚡ Generate';
+    updateSummaryCards();
+    document.getElementById('genBar').style.display = name === 'home' ? 'none' : 'block';
+  }
+
+  // ── CREATE TRIP ──
+  let selectedStyles = [];
+  let eventCount = 0;
+
+  function toggleChip(el) {
+    el.classList.toggle('on');
+    const val = el.dataset.val;
+    if (el.classList.contains('on')) { if (!selectedStyles.includes(val)) selectedStyles.push(val); }
+    else { selectedStyles = selectedStyles.filter(s => s !== val); }
+    syncCreate();
+  }
+
+  function addEvent() {
+    eventCount++;
+    const id = `ev-${eventCount}`;
+    const div = document.createElement('div');
+    div.className = 'event-row'; div.id = id;
+    div.innerHTML = `
+      <button class="event-remove" onclick="removeEvent('${id}')">×</button>
+      <div class="event-row-top">
+        <div class="event-field">
+          <div class="field-lbl">Date</div>
+          <input type="text" placeholder="e.g. Jul 4, 2026" oninput="syncCreate()"/>
+        </div>
+        <div class="event-field">
+          <div class="field-lbl">Location</div>
+          <input type="text" placeholder="e.g. Whitehorse, YT" oninput="syncCreate()"/>
+        </div>
+      </div>
+      <div class="event-field">
+        <div class="field-lbl">Notes</div>
+        <input type="text" placeholder="e.g. Music festival · must arrive by noon" oninput="syncCreate()"/>
+      </div>`;
+    document.getElementById('events-list').appendChild(div);
+    syncCreate();
+  }
+
+  function removeEvent(id) {
+    document.getElementById(id)?.remove();
+    syncCreate();
+  }
+
+  function getEvents() {
+    return Array.from(document.querySelectorAll('.event-row')).map(row => {
+      const inputs = row.querySelectorAll('input');
+      return { date: inputs[0]?.value||'', location: inputs[1]?.value||'', notes: inputs[2]?.value||'' };
+    }).filter(e => e.date || e.location);
+  }
+
+  function syncCreate() {
+    const start = document.getElementById('c-startLoc').value.trim();
+    const end = document.getElementById('c-endLoc').value.trim();
+    const depart = document.getElementById('c-departDate').value.trim();
+    const dur = document.getElementById('c-duration').value.trim();
+    const veh = document.getElementById('c-vehicle').value.trim();
+    const events = getEvents();
+    const hasContent = start || end || depart;
+    document.getElementById('preview-lbl').style.display = hasContent ? '' : 'none';
+    document.getElementById('trip-preview').style.display = hasContent ? '' : 'none';
+    if (!hasContent) return;
+    const setV = (id, val) => {
+      const el = document.getElementById(id);
+      el.textContent = val || '—';
+      el.className = val ? 'info-val' : 'info-val empty';
+    };
+    setV('prev-route', start && end ? `${start} → ${end}` : start || end);
+    setV('prev-date', depart);
+    setV('prev-dur', dur ? `${dur} days` : null);
+    setV('prev-veh', veh);
+    setV('prev-style', selectedStyles.length ? selectedStyles.join(', ') : null);
+    setV('prev-events', events.length ? events.map(e=>`⚓ ${e.date} · ${e.location}`).join('\n') : null);
+    // Also sync to main trip params so other screens use this data
+    if (start) { document.getElementById('startLoc').value = start; }
+    if (end) { document.getElementById('endLoc').value = end; }
+    if (depart) { document.getElementById('departDate').value = depart; }
+    if (dur) { document.getElementById('duration').value = dur; }
+    syncHeader();
+  }
+
+  function buildCreatePrompt() {
+    const start   = document.getElementById('c-startLoc').value.trim();
+    const end     = document.getElementById('c-endLoc').value.trim();
+    const depart  = document.getElementById('c-departDate').value.trim();
+    const ret     = document.getElementById('c-returnDate').value.trim();
+    const dur     = document.getElementById('c-duration').value.trim();
+    const veh     = document.getElementById('c-vehicle').value.trim();
+    const fuel    = document.getElementById('c-fuelRange').value.trim();
+    const group   = document.getElementById('c-groupSize').value.trim();
+    const mods    = document.getElementById('c-mods').value.trim();
+    const avoid   = document.getElementById('c-avoid').value.trim();
+    const notes   = document.getElementById('c-notes').value.trim();
+    const budget  = document.getElementById('c-budget').value.trim();
+    const events  = getEvents();
+    let p = `TRIP PARAMETERS:\n`;
+    p += `- Start: ${start||'TBD'}\n- End: ${end||'TBD'}\n`;
+    p += `- Departure: ${depart||'TBD'}\n`;
+    if (ret) p += `- Return: ${ret}\n`;
+    p += `- Duration: ${dur||'TBD'} days\n`;
+    if (veh) p += `\nVEHICLE:\n- ${veh}\n`;
+    if (fuel) p += `- Fuel range: ${fuel} miles\n`;
+    if (mods) p += `- Build: ${mods}\n`;
+    if (group) p += `- Group size: ${group}\n`;
+    if (selectedStyles.length) p += `\nTRAVEL STYLE: ${selectedStyles.join(', ')}\n`;
+    if (events.length) {
+      p += `\nFIXED EVENTS (⚓ hard anchors — do not move):\n`;
+      events.forEach(e => p += `- ${e.date} · ${e.location}${e.notes ? ' · ' + e.notes : ''}\n`);
+    }
+    if (avoid) p += `\nAVOID: ${avoid}\n`;
+    if (budget) p += `BUDGET: ${budget}\n`;
+    if (notes) p += `SPECIAL INSTRUCTIONS: ${notes}\n`;
+    if (docContent) p += `\nREFERENCE DOC:\n---\n${docContent}\n---\n`;
+    p += `\nREQUEST:\nGenerate (A) a high-level route summary with 8–10 bullet corridors, then (B) a phase breakdown with 5–8 phases. For each phase: day range, main goals, key logistics (fuel/remoteness/border crossings), 1–3 food highlights, and a Permits & Border Crossings subsection. Use markdown headers. Mark fixed events ⚓. Mark fuel gaps ⚠.`;
+    return p;
+  }
+
+  function goToByName(name) {
+    const tabs = document.querySelectorAll('.nav-tab');
+    const names = ['home','daily','csv','daydive','permits','food'];
+    goTo(name, tabs[names.indexOf(name)]);
+    // scroll nav tab into view
+    tabs[names.indexOf(name)]?.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  }
+
+  // ── HEADER SYNC ──
   function syncHeader() {
     const d = document.getElementById('duration').value;
     const dt = document.getElementById('departDate').value;
     const start = document.getElementById('startLoc').value.trim();
     const end = document.getElementById('endLoc').value.trim();
-
-    // Days
     document.getElementById('statDays').textContent = d || '—';
     document.getElementById('hdrDays').textContent = (d || '—') + ' days';
-
-    // Date
-    if (dt) {
-      document.getElementById('hdrDate').textContent = dt;
-    }
-
-    // Route — shorten to city abbreviations for header
+    if (dt) document.getElementById('hdrDate').textContent = dt;
     function abbrev(loc) {
       if (!loc) return '—';
-      const parts = loc.split(',');
-      const city = parts[0].trim();
-      // Abbreviate state/province if present
-      const state = parts[1] ? parts[1].trim().split(' ').map(w => w[0]).join('').toUpperCase() : '';
+      const p = loc.split(',');
+      const city = p[0].trim();
+      const state = p[1] ? p[1].trim().split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase() : '';
       return state ? `${city}, ${state}` : city;
     }
     document.getElementById('hdrRoute').textContent = `${abbrev(start)} → ${abbrev(end)}`;
+    updateSummaryCards();
   }
 
-  // Parse reference doc for start/end location and auto-fill fields
-  function parseRefDoc(text) {
-    // Look for Start Location / End Location / Start Date / Total Duration in doc
-    const patterns = {
-      start: /start[\s_]location[\s|:]+([^\n|]+)/i,
-      end:   /end[\s_]location[\s|:]+([^\n|]+)/i,
-      date:  /start[\s_]date[\s|:]+([^\n|]+)/i,
-      duration: /total[\s_]duration[\s|:]+(\d+)/i,
+  function updateSummaryCards() {
+    const start = document.getElementById('startLoc').value.trim();
+    const end = document.getElementById('endLoc').value.trim();
+    const dt = document.getElementById('departDate').value.trim();
+    const dur = document.getElementById('duration').value.trim();
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (val) { el.textContent = val; el.className = 'info-val'; }
+      else { el.textContent = 'Not set'; el.className = 'info-val empty'; }
     };
-    let found = false;
-    const startMatch = text.match(patterns.start);
-    if (startMatch) {
-      const val = startMatch[1].trim().replace(/\|.*/, '').trim();
-      if (val) { document.getElementById('startLoc').value = val; found = true; }
-    }
-    const endMatch = text.match(patterns.end);
-    if (endMatch) {
-      const val = endMatch[1].trim().replace(/\|.*/, '').trim();
-      if (val) { document.getElementById('endLoc').value = val; found = true; }
-    }
-    const dateMatch = text.match(patterns.date);
-    if (dateMatch) {
-      const val = dateMatch[1].trim().replace(/\|.*/, '').trim();
-      if (val) { document.getElementById('departDate').value = val; found = true; }
-    }
-    const durMatch = text.match(patterns.duration);
-    if (durMatch) {
-      document.getElementById('duration').value = durMatch[1].trim();
-    }
-    if (found) syncHeader();
-    return found;
+    setVal('ds-route', start && end ? `${start} → ${end}` : null);
+    setVal('ds-date', dt || null);
+    setVal('ds-dur', dur ? `${dur} days` : null);
   }
 
-  // Parse generated output and update stats bar
-  function updateStatsFromOutput(raw) {
-    // --- EST. MILES: sum all mileage numbers in the text ---
-    let totalMiles = 0;
-    // Match patterns like "185 mi", "~230 mi", "350 miles", "1,140 mi"
-    const miMatches = raw.match(/[\d,]+\s*(?:mi|miles)/gi) || [];
-    // Use the largest single cumulative number if present (e.g. "1,140 mi total")
-    const totalMatch = raw.match(/([\d,]+)\s*(?:mi|miles)\s*total/i);
-    if (totalMatch) {
-      totalMiles = parseInt(totalMatch[1].replace(/,/g, ''));
-    } else {
-      // Sum daily distances — grab numbers before " mi" that look like daily legs (< 800)
-      let legSum = 0;
-      miMatches.forEach(m => {
-        const n = parseInt(m.replace(/[^0-9]/g, ''));
-        if (n > 0 && n < 800) legSum += n;
-      });
-      // Rough dedup: if sum seems too large, scale back
-      totalMiles = legSum > 0 ? legSum : 0;
+  // ── GOOGLE DRIVE LINK ──
+  function extractDriveId(url) {
+    // Handles: /d/FILE_ID/, /document/d/FILE_ID/, ?id=FILE_ID, sharing links
+    const patterns = [
+      /\/d\/([a-zA-Z0-9_-]{20,})/,
+      /[?&]id=([a-zA-Z0-9_-]{20,})/,
+      /\/file\/d\/([a-zA-Z0-9_-]{20,})/,
+    ];
+    for (const p of patterns) {
+      const m = url.match(p);
+      if (m) return m[1];
     }
-
-    // --- NO SIGNAL: count ⚠ symbols or "no signal" / "no service" mentions ---
-    const noSignalCount = (raw.match(/⚠|no.signal|no.service|no.cell|limited.service|out.of.range/gi) || []).length;
-
-    // --- DAYS: count actual day rows in table (Day N pattern) ---
-    const dayMatches = raw.match(/^\|\s*\d+\s*\|/gm) || [];
-    const actualDays = dayMatches.length > 0 ? dayMatches.length : parseInt(document.getElementById('duration').value) || 0;
-
-    // --- PHASES: count phase headers ---
-    const phaseCount = (raw.match(/phase\s+\d+/gi) || []).length;
-
-    // Update DOM
-    document.getElementById('statDays').textContent = actualDays || document.getElementById('duration').value || '—';
-    document.getElementById('hdrDays').textContent = (actualDays || document.getElementById('duration').value || '—') + ' days';
-
-    if (totalMiles > 0) {
-      const formatted = totalMiles >= 1000
-        ? '~' + (Math.round(totalMiles / 100) * 100).toLocaleString()
-        : '~' + totalMiles;
-      document.getElementById('statMiles').textContent = formatted;
-    }
-
-    if (noSignalCount > 0) {
-      document.getElementById('statSignal').textContent = noSignalCount;
-    }
-
-    // Update bottom sub-line
-    const stops = dayMatches.length || '—';
-    document.getElementById('genSub').textContent =
-      `${stops} days · ${noSignalCount} no-signal zones · ${phaseCount > 0 ? phaseCount + ' phases' : 'route planned'}`;
+    return null;
   }
 
-  // File upload
-  // Extract plain text from a .docx file using JSZip
+  function isGoogleDoc(url) {
+    return url.includes('docs.google.com/document');
+  }
+
+  function validateDriveLink() {
+    const url = document.getElementById('gdriveLink').value.trim();
+    const wrap = document.querySelector('.modal-gdrive-wrap');
+    const btn = document.getElementById('gdriveFetchBtn');
+    const status = document.getElementById('gdriveStatus');
+    wrap.className = 'modal-gdrive-wrap';
+    status.className = 'modal-gdrive-status';
+    status.textContent = '';
+    btn.disabled = true;
+    if (!url) return;
+    const id = extractDriveId(url);
+    const isDoc = isGoogleDoc(url);
+    if (id || isDoc) {
+      wrap.classList.add('valid');
+      btn.disabled = false;
+      status.className = 'modal-gdrive-status info';
+      status.textContent = isDoc ? '● Google Doc detected — will export as text' : '● Drive file detected — will attempt text export';
+    } else if (url.length > 10) {
+      wrap.classList.add('error');
+      status.className = 'modal-gdrive-status err';
+      status.textContent = '✗ Not a recognized Google Drive or Docs link';
+    }
+  }
+
+  async function fetchDriveDoc() {
+    const url = document.getElementById('gdriveLink').value.trim();
+    const btn = document.getElementById('gdriveFetchBtn');
+    const status = document.getElementById('gdriveStatus');
+    const zone = document.getElementById('modalUploadZone');
+    const icon = document.getElementById('modalUploadIcon');
+    const title = document.getElementById('modalUploadTitle');
+    const uploadStatus = document.getElementById('modalUploadStatus');
+
+    btn.textContent = '…';
+    btn.classList.add('loading');
+    btn.disabled = true;
+    status.className = 'modal-gdrive-status info';
+    status.textContent = 'Fetching from Google Drive…';
+
+    try {
+      // Build export URL
+      let exportUrl;
+      if (isGoogleDoc(url)) {
+        const id = extractDriveId(url);
+        if (!id) throw new Error('Could not extract document ID from link');
+        exportUrl = `https://docs.google.com/document/d/${id}/export?format=txt`;
+      } else {
+        const id = extractDriveId(url);
+        if (!id) throw new Error('Could not extract file ID from link');
+        exportUrl = `https://drive.google.com/uc?export=download&id=${id}`;
+      }
+
+      // Route through server proxy to avoid CORS
+      const res = await fetch(`/api/gdrive?url=${encodeURIComponent(exportUrl)}`);
+      const contentType = res.headers.get('content-type') || '';
+
+      let text;
+      if (contentType.includes('application/json')) {
+        const data = await res.json();
+        throw new Error(data.error || `Server returned ${res.status}`);
+      } else {
+        text = await res.text();
+      }
+
+      if (!res.ok) throw new Error(`Fetch failed (${res.status})`);
+      if (text.length < 50) throw new Error('Document appears empty — check sharing settings');
+
+      pendingDocContent = text.slice(0, 14000);
+      pendingDocText = text;
+      zone.classList.add('loaded');
+      icon.textContent = '✅';
+      title.textContent = 'Google Drive doc';
+      uploadStatus.textContent = `${(text.length / 1000).toFixed(1)}k chars · ready to load`;
+      document.getElementById('modalConfirmBtn').disabled = false;
+      status.className = 'modal-gdrive-status ok';
+      status.textContent = `✓ Loaded ${(text.length / 1000).toFixed(1)}k chars — tap Load Doc to continue`;
+    } catch (err) {
+      status.className = 'modal-gdrive-status err';
+      status.textContent = `✗ ${err.message}`;
+    } finally {
+      btn.textContent = 'Fetch';
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  }
+  let pendingDocContent = '';
+  let pendingDocText = '';
+
+  function openUploadModal() {
+    pendingDocContent = '';
+    pendingDocText = '';
+    document.getElementById('modalUploadStatus').textContent = '';
+    document.getElementById('modalUploadTitle').textContent = 'Tap to browse';
+    document.getElementById('modalUploadIcon').textContent = '📄';
+    document.getElementById('modalUploadZone').classList.remove('loaded');
+    document.getElementById('modalConfirmBtn').disabled = true;
+    document.getElementById('gdriveLink').value = '';
+    document.getElementById('gdriveStatus').textContent = '';
+    document.getElementById('gdriveStatus').className = 'modal-gdrive-status';
+    document.querySelector('.modal-gdrive-wrap').className = 'modal-gdrive-wrap';
+    document.getElementById('gdriveFetchBtn').disabled = true;
+    document.getElementById('uploadModal').classList.add('open');
+  }
+
+  function closeUploadModal(e) {
+    if (e && e.target !== document.getElementById('uploadModal')) return;
+    document.getElementById('uploadModal').classList.remove('open');
+  }
+
+  document.getElementById('modalFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('modalUploadStatus');
+    const zone = document.getElementById('modalUploadZone');
+    const title = document.getElementById('modalUploadTitle');
+    const icon = document.getElementById('modalUploadIcon');
+    status.textContent = 'Reading…';
+    try {
+      let text = file.name.endsWith('.docx') ? await readDocx(file) : await file.text();
+      pendingDocContent = text.slice(0, 14000);
+      pendingDocText = text;
+      zone.classList.add('loaded');
+      icon.textContent = '✅';
+      title.textContent = file.name;
+      status.textContent = `${(text.length/1000).toFixed(1)}k chars · ready to load`;
+      document.getElementById('modalConfirmBtn').disabled = false;
+    } catch(err) {
+      status.textContent = `Error: ${err.message}`;
+    }
+  });
+
+  function confirmUpload() {
+    if (!pendingDocContent) return;
+    docContent = pendingDocContent;
+    const parsed = parseRefDoc(docContent);
+    // Update upload button to show loaded state
+    const btn = document.querySelector('.upload-ref-btn');
+    const title = document.getElementById('modalUploadTitle').textContent;
+    btn.textContent = `✓ ${title}`;
+    btn.classList.add('loaded');
+    // Update home screen upload card too
+    document.getElementById('uploadCard').classList.add('loaded');
+    document.getElementById('uploadStatus').textContent = `✓ ${title} · ${(pendingDocText.length/1000).toFixed(1)}k chars${parsed ? ' · params loaded ✓' : ''}`;
+    document.getElementById('statDoc').textContent = '1';
+    document.getElementById('uploadModal').classList.remove('open');
+  }
   async function readDocx(file) {
     const zip = await JSZip.loadAsync(file);
     const xmlFile = zip.file('word/document.xml');
-    if (!xmlFile) throw new Error('Not a valid .docx file');
+    if (!xmlFile) throw new Error('Not a valid .docx');
     const xml = await xmlFile.async('string');
-    // Strip XML tags, decode entities, collapse whitespace
     return xml
-      .replace(/<w:p[ >][^>]*>/g, '\n')   // paragraph → newline
-      .replace(/<w:tab\/>/g, '\t')          // tabs
-      .replace(/<[^>]+>/g, '')              // strip all tags
+      .replace(/<w:p[ >][^>]*>/g, '\n')
+      .replace(/<w:tab\/>/g, '\t')
+      .replace(/<[^>]+>/g, '')
       .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&apos;/g,"'").replace(/&quot;/g,'"')
-      .replace(/[ \t]+/g, ' ')             // collapse spaces
-      .replace(/\n[ \t]+/g, '\n')          // trim line starts
-      .replace(/\n{3,}/g, '\n\n')          // max 2 blank lines
-      .trim();
+      .replace(/[ \t]+/g,' ').replace(/\n[ \t]+/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+  }
+
+  function parseRefDoc(text) {
+    const clean = s => s.replace(/\|.*/, '').replace(/[*_]/g,'').trim();
+    let found = false;
+    const patterns = [
+      { re: /start[\s_]location[\s|:\t]+([^\n|]+)/i, id: 'startLoc' },
+      { re: /end[\s_]location[\s|:\t]+([^\n|]+)/i,   id: 'endLoc' },
+      { re: /start[\s_]date[\s|:\t]+([^\n|]+)/i,     id: 'departDate' },
+      { re: /total[\s_]?duration[\s|:\t]+([^\n|]+)/i,id: 'duration', num: true },
+    ];
+    patterns.forEach(({ re, id, num }) => {
+      const m = text.match(re);
+      if (m) {
+        let val = clean(m[1]);
+        if (num) val = val.match(/\d+/)?.[0] || '';
+        if (val) { document.getElementById(id).value = val; found = true; }
+      }
+    });
+    if (found) syncHeader();
+    return found;
   }
 
   document.getElementById('docUpload').addEventListener('change', async (e) => {
@@ -639,110 +1076,51 @@
     const card = document.getElementById('uploadCard');
     status.textContent = 'Reading…';
     try {
-      let text;
-      if (file.name.endsWith('.docx')) {
-        text = await readDocx(file);
-      } else {
-        text = await file.text();
-      }
+      let text = file.name.endsWith('.docx') ? await readDocx(file) : await file.text();
       docContent = text.slice(0, 14000);
-      card.classList.add('has-file');
+      card.classList.add('loaded');
       const parsed = parseRefDoc(docContent);
       status.textContent = `✓ ${file.name} · ${(text.length/1000).toFixed(1)}k chars${parsed ? ' · params loaded ✓' : ''}`;
       document.getElementById('statDoc').textContent = '1';
     } catch(err) {
       status.textContent = `Error: ${err.message}`;
-      docContent = '';
     }
   });
 
-  // Filter pills sync to mode
-  function setFilter(el, mode) {
-    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    const card = document.querySelector(`[data-mode="${mode}"]`);
-    if (card) selectMode(card);
-    card && card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  // Mode selection
-  function selectMode(el) {
-    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedMode = el.dataset.mode;
-    // sync pill
-    const modeMap = { overview:0, daily:1, csv:2, daydive:3, permits:4, food:5 };
-    document.querySelectorAll('.pill').forEach((p,i) => p.classList.toggle('active', i === modeMap[selectedMode]));
-    if (selectedMode === 'overview') document.querySelectorAll('.pill')[0].classList.add('active');
-  }
-
-  // Day dive modal
-  let selectedDay = null;
-
-  function openDayModal() {
-    // Mark the card selected visually
-    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
-    document.querySelector('[data-mode="daydive"]').classList.add('selected');
-    selectedMode = 'daydive';
-    document.getElementById('dayNumber').value = '';
-    document.getElementById('dayHint').textContent = 'Enter a day number from your itinerary';
-    document.getElementById('dayHint').className = 'modal-hint';
-    document.getElementById('dayModal').classList.add('open');
-    setTimeout(() => document.getElementById('dayNumber').focus(), 300);
-  }
-
-  function closeDayModal(e) {
-    if (e && e.target !== document.getElementById('dayModal')) return;
-    document.getElementById('dayModal').classList.remove('open');
-  }
-
-  // Live hint — if docContent has a section 04, preview the day
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('dayNumber').addEventListener('input', function() {
-      const day = parseInt(this.value);
-      const hint = document.getElementById('dayHint');
-      if (!day || day < 1) { hint.textContent = 'Enter a day number from your itinerary'; hint.className = 'modal-hint'; return; }
-      if (docContent) {
-        // Try to find the day in section 04
-        const dayRow = docContent.match(new RegExp(`\\|\\s*${day}\\s*\\|([^\\n]+)`, 'i'));
-        if (dayRow) {
-          const cols = dayRow[1].split('|').map(c => c.trim()).filter(Boolean);
-          hint.textContent = `Day ${day} found: ${cols[0] || ''} → ${cols[1] || ''}`;
-          hint.className = 'modal-hint found';
-          return;
-        }
-      }
-      hint.textContent = `Will deep-dive Day ${day} from the itinerary`;
-      hint.className = 'modal-hint';
-    });
-  });
-
-  function confirmDayDive() {
+  // ── DAY HINT ──
+  function updateDayHint() {
     const day = parseInt(document.getElementById('dayNumber').value);
-    if (!day || day < 1) { document.getElementById('dayHint').textContent = 'Please enter a valid day number'; return; }
-    selectedDay = day;
-    document.getElementById('dayModal').classList.remove('open');
-    runPlanner();
+    const hint = document.getElementById('dayHint');
+    document.getElementById('daydive-lbl').textContent = day ? `Day ${day} Deep-Dive` : 'Day Deep-Dive';
+    if (!day) { hint.textContent = 'Enter a day number from your itinerary'; hint.className = 'day-hint'; return; }
+    if (docContent) {
+      const m = docContent.match(new RegExp(`\\|\\s*0*${day}\\s*\\|([^\\n]+)`, 'i'));
+      if (m) {
+        const cols = m[1].split('|').map(c => c.trim()).filter(Boolean);
+        hint.textContent = `Day ${day} found: ${cols[0] || ''} → ${cols[1] || ''}`;
+        hint.className = 'day-hint found'; return;
+      }
+    }
+    hint.textContent = `Will deep-dive Day ${day} from the itinerary`;
+    hint.className = 'day-hint';
   }
 
+  // ── BUILD PROMPT ──
   const SYSTEM = `You are Claud v1.1 — an experienced overland and expedition planner.
 VEHICLE: 2004 Lexus GX470, well-equipped overland build. ~400mi fuel range. Capable on gravel/forest roads. Not for hardcore rock-crawling.
 GROUP: 1-2 travelers. Intermediate experience. Values solitude, photography, minimalist approach, local food.
 TRAVEL STYLE: On-road scenic overland. Easy-to-moderate difficulty, one advanced segment (Dalton Highway).
 CAMPING PRIORITY: 1) Dispersed/boondock 2) Paid campground 3) Hotel/motel.
-CAMPING FORMAT: Dispersed: [area; notes] | Campground: [name; services; phone; web] | Hotel: [name; reason].
 FOOD: Casual local, street food, non-chain restaurants, BBQ, regional specialties. Omnivorous.
 CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State assumptions. Mark fixed events ⚓. Mark fuel gaps ⚠.`;
 
   const PROMPTS = {
-    overview: 'Generate (A) a high-level route summary with 8-10 bullet corridors noting major waypoints and food cities, then (B) a phase breakdown with 5-8 phases. For each phase: day range, main goals, key logistics (fuel/remoteness), 1-3 food highlights, and a Permits & Border Crossings subsection. Use markdown headers. Mark fixed events ⚓. Mark fuel gaps ⚠.',
-    daily: 'Generate a complete day-by-day table. Markdown columns: Day | Date | Start | End | ~Miles | Drive Time | Key Stops / POIs | Overnight. One row per day. Mark fixed events ⚓. Mark fuel gaps ⚠.',
-    csv: 'Output ONLY a CSV. No explanation, no markdown, no fences.\nHeader: Title,Latitude,Longitude,Weather,Description,Fees,Next Stop,Camping,Notes\nTitle: "Day X | Location, STATE". One row per day. Lat/Long as plain decimals. Quote fields with commas.',
+    home:    'Generate (A) a high-level route summary with 8-10 bullet corridors noting major waypoints and food cities, then (B) a phase breakdown with 5-8 phases. For each phase: day range, main goals, key logistics, 1-3 food highlights, and a Permits & Border Crossings subsection. Use markdown headers.',
+    daily:   'Generate a complete day-by-day table. Markdown columns: Day | Date | Start | End | ~Miles | Drive Time | Key Stops / POIs | Overnight. One row per day. Mark fixed events ⚓. Mark fuel gaps ⚠.',
+    csv:     'Output ONLY a CSV. No explanation, no markdown, no fences.\nHeader: Title,Latitude,Longitude,Weather,Description,Fees,Next Stop,Camping,Notes\nTitle: "Day X | Location, STATE". One row per day. Lat/Long as plain decimals. Quote fields with commas.',
     permits: "ONLY the Permits & Border Crossings section. Two markdown tables:\n1. Permits & Reservations: Name | What it's for | How to obtain | Lead time | Notes\n2. Border Crossings: Crossing | Countries | Documents | Hours/remoteness | Notes",
-    food: 'Regional food guide for the full route. Group by major hub. For each: 2-5 spots with name, type, what to order, timing. End with MUST-TRY SPECIALS. Mark top picks ★.',
+    food:    'Regional food guide for the full route. Group by major hub. For each: 2-5 spots with name, type, what to order, timing. End with MUST-TRY SPECIALS. Mark top picks ★.',
   };
-
-  const LABELS = { overview:'Route Summary & Phases', daily:'Full Daily Itinerary', csv:'Google MyMaps CSV', daydive:'Day Deep-Dive', permits:'Permits & Crossings', food:'Regional Food Guide' };
 
   function buildPrompt() {
     const depart = document.getElementById('departDate').value;
@@ -750,127 +1128,129 @@ CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State a
     const start = document.getElementById('startLoc').value;
     const end = document.getElementById('endLoc').value;
     const notes = document.getElementById('extraNotes').value.trim();
-
     let req;
-    if (selectedMode === 'daydive') {
-      const day = selectedDay || 1;
-      // Try to extract the day row from section 04 in the uploaded doc
-      let dayContext = '';
+    if (currentScreen === 'daydive') {
+      const day = parseInt(document.getElementById('dayNumber').value) || 1;
+      let dayCtx = '';
       if (docContent) {
-        const rowMatch = docContent.match(new RegExp(`\\|\\s*0*${day}\\s*\\|([^\\n]+)`, 'i'));
-        if (rowMatch) dayContext = `\nThe uploaded reference doc shows Day ${day} as: | ${day} |${rowMatch[1]}`;
+        const m = docContent.match(new RegExp(`\\|\\s*0*${day}\\s*\\|([^\\n]+)`, 'i'));
+        if (m) dayCtx = `\nReference doc shows Day ${day}: | ${day} |${m[1]}`;
       }
-      req = `Generate a detailed deep-dive for Day ${day} of this overland trip.${dayContext}
-
-If the reference document contains a Section 04 Full Itinerary table, extract the exact row for Day ${day} and use those details as the anchor. Then expand it fully with:
-
-1. **Day ${day} Overview** — date, start/end location, total miles, drive time
-2. **Detailed Drive Log** — turn-by-turn corridor notes, road conditions, highlights en route
-3. **Key Stops** — 2-4 stops with GPS coordinates, what to see/do, time needed
-4. **Overnight** — specific campsite or lodging (name, GPS, booking info, suitability for GX470)
-5. **Food** — breakfast/lunch/dinner recommendations near this day's route
-6. **Fuel** — nearest stations, distances, flag any gaps ⚠
-7. **Weather** — typical conditions for this location and time of year
-8. **Photography** — golden hour times, best shots, specific viewpoints
-9. **Next Day Preview** — brief look ahead at Day ${parseInt(day)+1}
-
-Use markdown headers. Be specific with place names and mile markers where known.`;
+      req = `Generate a detailed deep-dive for Day ${day}.${dayCtx}\nIf Section 04 Full Itinerary exists in the reference doc, use that row as the anchor. Expand with:\n1. Day Overview (date, start/end, miles, drive time)\n2. Detailed Drive Log (corridor notes, road conditions)\n3. Key Stops (2-4, with GPS, what to see, time needed)\n4. Overnight (specific name, GPS, booking info, GX470 suitability)\n5. Food (breakfast/lunch/dinner near route)\n6. Fuel (nearest stations, gaps ⚠)\n7. Weather (typical for location and time of year)\n8. Photography (golden hour, best shots, viewpoints)\n9. Next Day Preview\nUse markdown headers. Be specific with place names.`;
     } else {
-      req = PROMPTS[selectedMode];
+      req = PROMPTS[currentScreen] || PROMPTS.home;
     }
-
-    let p = `TRIP:\n- Departure: ${depart || 'TBD'}\n- Duration: ${duration || 'TBD'} days\n- Start: ${start || 'TBD'}\n- End: ${end || 'TBD'}\n`;
+    let p = `TRIP:\n- Departure: ${depart||'TBD'}\n- Duration: ${duration||'TBD'} days\n- Start: ${start||'TBD'}\n- End: ${end||'TBD'}\n`;
     if (notes) p += `- Instructions: ${notes}\n`;
     p += '\n';
-    if (docContent) p += `REFERENCE DOC (includes Section 04 Full Itinerary if present):\n---\n${docContent}\n---\n\n`;
+    if (docContent) p += `REFERENCE DOC:\n---\n${docContent}\n---\n\n`;
     p += `REQUEST:\n${req}`;
     return p;
   }
 
+  // ── RUN ──
   async function runPlanner() {
+    if (currentScreen === 'home') { goToByName('daily'); return; }
+    const errEl = document.getElementById(`err-${currentScreen}`);
+    const outWrap = document.getElementById(`out-${currentScreen}`);
+    const outBody = document.getElementById(`body-${currentScreen}`);
+    if (!errEl || !outWrap || !outBody) return;
     const btn = document.getElementById('genBtn');
     const spinner = document.getElementById('genSpinner');
     const btnText = document.getElementById('genText');
-    const outputWrap = document.getElementById('outputWrap');
-    const outputBody = document.getElementById('outputBody');
-    const errorBox = document.getElementById('errorBox');
     const sub = document.getElementById('genSub');
-
-    errorBox.style.display = 'none';
-    outputWrap.style.display = 'none';
+    errEl.style.display = 'none';
+    outWrap.style.display = 'none';
     btn.disabled = true;
     spinner.style.display = 'block';
-    btnText.textContent = 'Planning route…';
+    btnText.textContent = 'Planning…';
     sub.textContent = 'Contacting Claude API…';
-    document.getElementById('outputLbl').textContent = LABELS[selectedMode] || 'Output';
-
+    const prompt = currentScreen === 'create' ? buildCreatePrompt() : buildPrompt();
     try {
       const res = await fetch('/api/plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: SYSTEM, max_tokens: 4000, messages: [{ role:'user', content: buildPrompt() }] }),
+        body: JSON.stringify({ system: SYSTEM, max_tokens: 4000, messages: [{ role:'user', content: prompt }] }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Server error');
-      const raw = (data.content || []).map(b => b.text || '').join('');
-      outputWrap.style.display = 'block';
-      if (selectedMode === 'csv') { outputBody.classList.add('csv'); outputBody.textContent = raw; }
-      else { outputBody.classList.remove('csv'); outputBody.innerHTML = renderMD(raw); }
+      const raw = (data.content||[]).map(b=>b.text||'').join('');
+      outWrap.style.display = 'block';
+      if (currentScreen === 'csv') outBody.textContent = raw;
+      else outBody.innerHTML = renderMD(raw);
       updateStatsFromOutput(raw);
       sub.textContent = 'Done · tap COPY to export';
-      setTimeout(() => outputWrap.scrollIntoView({ behavior:'smooth', block:'start' }), 120);
+      setTimeout(() => outWrap.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
     } catch(err) {
-      errorBox.style.display = 'block';
-      errorBox.textContent = '⚠ ' + (err.message || 'Error. Check server logs.');
-      sub.textContent = '6 stops · 2 no-signal zones flagged';
+      errEl.style.display = 'block';
+      errEl.textContent = '⚠ ' + (err.message||'Error. Check server logs.');
+      sub.textContent = 'Error — try again';
     } finally {
       btn.disabled = false;
       spinner.style.display = 'none';
-      btnText.textContent = '⚡ Generate Itinerary';
+      btnText.textContent = SCREEN_LABELS[currentScreen] || '⚡ Generate';
     }
   }
 
+  function updateStatsFromOutput(raw) {
+    const totalMatch = raw.match(/([\d,]+)\s*(?:mi|miles)\s*total/i);
+    if (totalMatch) document.getElementById('statMiles').textContent = '~' + parseInt(totalMatch[1].replace(/,/g,'')).toLocaleString();
+    const signals = (raw.match(/⚠|no.signal|no.service|no.cell|limited.service/gi)||[]).length;
+    if (signals > 0) document.getElementById('statSignal').textContent = signals;
+    const dayRows = (raw.match(/^\|\s*\d+\s*\|/gm)||[]).length;
+    if (dayRows > 0) { document.getElementById('statDays').textContent = dayRows; document.getElementById('hdrDays').textContent = dayRows + ' days'; }
+    const phases = (raw.match(/phase\s+\d+/gi)||[]).length;
+    document.getElementById('genSub').textContent = `${dayRows||'—'} days · ${signals} no-signal zones${phases ? ' · ' + phases + ' phases' : ''}`;
+  }
+
+  // ── MARKDOWN RENDERER ──
   function renderMD(t) {
     const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const fmt = s => s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>');
     let lines = t.split('\n'), html = '', inTable = false, rows = [];
     for (let line of lines) {
-      if (/^\|.+\|$/.test(line)) { if (!inTable) { inTable = true; rows = []; } rows.push(line); continue; }
-      if (inTable) { html += flushTbl(rows); inTable = false; rows = []; }
+      if (/^\|.+\|$/.test(line)) { if (!inTable) { inTable=true; rows=[]; } rows.push(line); continue; }
+      if (inTable) { html += flushTbl(rows); inTable=false; rows=[]; }
       line = esc(line);
-      if (/^### /.test(line)) { html += `<h3>${fmt(line.slice(4))}</h3>`; continue; }
-      if (/^## /.test(line)) { html += `<h2>${fmt(line.slice(3))}</h2>`; continue; }
-      if (/^# /.test(line)) { html += `<h1>${fmt(line.slice(2))}</h1>`; continue; }
-      if (/^---+$/.test(line.trim())) { html += '<hr>'; continue; }
-      if (/^[-*] /.test(line)) { html += `<li>${fmt(line.slice(2))}</li>`; continue; }
-      if (/^\d+\. /.test(line)) { html += `<li>${fmt(line.replace(/^\d+\. /,''))}</li>`; continue; }
-      if (!line.trim()) { html += '<br>'; continue; }
-      html += `<p>${fmt(line)}</p>`;
+      if (/^### /.test(line)) { html+=`<h3>${fmt(line.slice(4))}</h3>`; continue; }
+      if (/^## /.test(line))  { html+=`<h2>${fmt(line.slice(3))}</h2>`; continue; }
+      if (/^# /.test(line))   { html+=`<h1>${fmt(line.slice(2))}</h1>`; continue; }
+      if (/^---+$/.test(line.trim())) { html+='<hr>'; continue; }
+      if (/^[-*] /.test(line)) { html+=`<li>${fmt(line.slice(2))}</li>`; continue; }
+      if (/^\d+\. /.test(line)) { html+=`<li>${fmt(line.replace(/^\d+\. /,''))}</li>`; continue; }
+      if (!line.trim()) { html+='<br>'; continue; }
+      html+=`<p>${fmt(line)}</p>`;
     }
-    if (inTable) html += flushTbl(rows);
+    if (inTable) html+=flushTbl(rows);
     return html;
   }
-
   function flushTbl(rows) {
-    const parse = r => r.slice(1,-1).split('|').map(c => c.trim());
+    const parse = r => r.slice(1,-1).split('|').map(c=>c.trim());
     const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const fmt = s => s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
     const f = rows.filter(r => !/^\|[-| :]+\|$/.test(r));
     if (!f.length) return '';
-    const [head, ...body] = f;
-    const ths = parse(head).map(c => `<th>${fmt(esc(c))}</th>`).join('');
-    const trs = body.map(r => '<tr>'+parse(r).map(c=>`<td>${fmt(esc(c))}</td>`).join('')+'</tr>').join('');
+    const [head,...body] = f;
+    const ths = parse(head).map(c=>`<th>${fmt(esc(c))}</th>`).join('');
+    const trs = body.map(r=>'<tr>'+parse(r).map(c=>`<td>${fmt(esc(c))}</td>`).join('')+'</tr>').join('');
     return `<div class="table-wrap"><table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
   }
-
-  function copyOutput() {
-    navigator.clipboard.writeText(document.getElementById('outputBody').innerText || '').then(() => {
-      const btn = document.querySelector('.copy-btn');
-      btn.textContent = 'COPIED!';
-      setTimeout(() => btn.textContent = 'COPY', 2000);
+  function copyOut(id) {
+    navigator.clipboard.writeText(document.getElementById(id).innerText||'').then(()=>{
+      event.target.textContent='COPIED!';
+      setTimeout(()=>event.target.textContent='COPY',2000);
     });
   }
 
+  function goToByName(name) {
+    const names = ['create','home','daily','csv','daydive','permits','food'];
+    const tabs = document.querySelectorAll('.nav-tab');
+    goTo(name, tabs[names.indexOf(name)]);
+    tabs[names.indexOf(name)]?.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  }
+
+  // Init — start on Home (index 1, since Create is index 0)
+  goTo('home', document.querySelectorAll('.nav-tab')[1]);
   syncHeader();
 </script>
 </body>
