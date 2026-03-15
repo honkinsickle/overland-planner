@@ -260,6 +260,44 @@
     .output-body::-webkit-scrollbar { width: 4px; }
     .output-body::-webkit-scrollbar-track { background: transparent; }
     .output-body::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+    /* ── DAY DIVE MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      align-items: flex-end; justify-content: center;
+      padding: 0 0 env(safe-area-inset-bottom, 0px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 20px 20px 0 0;
+      width: 100%; max-width: 600px;
+      padding: 24px 20px 32px;
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    .modal-icon { font-size: 28px; }
+    .modal-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .modal-sub { font-size: 11px; color: var(--orange); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; margin-top: 2px; }
+    .modal-body { margin-bottom: 20px; }
+    .modal-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .modal-input {
+      width: 100%; background: var(--surface3); border: 1.5px solid var(--border2);
+      border-radius: 10px; padding: 14px 16px; font-family: 'JetBrains Mono', monospace;
+      font-size: 28px; font-weight: 600; color: var(--orange); outline: none;
+      -webkit-appearance: none; text-align: center; letter-spacing: 2px;
+      transition: border-color 0.15s;
+    }
+    .modal-input:focus { border-color: var(--orange); }
+    .modal-hint { font-size: 11px; color: var(--text3); text-align: center; margin-top: 8px; font-family: 'JetBrains Mono', monospace; }
+    .modal-hint.found { color: var(--green); }
+    .modal-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+    .modal-cancel { background: var(--surface3); border: 1px solid var(--border2); color: var(--text2); font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; border-radius: 10px; padding: 14px; cursor: pointer; }
+    .modal-confirm { background: var(--orange); border: none; color: #fff; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; border-radius: 10px; padding: 14px; cursor: pointer; transition: background 0.15s; }
+    .modal-confirm:active { background: #C45E00; }
+    .modal-confirm:disabled { opacity: 0.4; }
   </style>
 </head>
 <body>
@@ -273,21 +311,21 @@
     </div>
     <div class="hdr-badge">GX470</div>
   </div>
-  <div class="hdr-sub">LA → Deadhorse, AK &nbsp;·&nbsp; <span id="hdrDays">80 days</span> &nbsp;·&nbsp; <span id="hdrDate">Jun 1 2026</span></div>
+  <div class="hdr-sub"><span id="hdrRoute">— → —</span> &nbsp;·&nbsp; <span id="hdrDays">— days</span> &nbsp;·&nbsp; <span id="hdrDate">—</span></div>
 </div>
 
 <!-- STATS BAR -->
 <div class="stats-bar">
   <div class="stat">
-    <div class="stat-val orange" id="statDays">80</div>
+    <div class="stat-val orange" id="statDays">—</div>
     <div class="stat-lbl">Days</div>
   </div>
   <div class="stat">
-    <div class="stat-val" id="statMiles">~4,200</div>
+    <div class="stat-val" id="statMiles">—</div>
     <div class="stat-lbl">Est. Miles</div>
   </div>
   <div class="stat">
-    <div class="stat-val red">2</div>
+    <div class="stat-val red" id="statSignal">—</div>
     <div class="stat-lbl">No Signal</div>
   </div>
   <div class="stat">
@@ -302,7 +340,7 @@
     <div class="pill active" onclick="setFilter(this,'overview')">All</div>
     <div class="pill" onclick="setFilter(this,'daily')"><span class="dot dot-orange"></span> Daily Table</div>
     <div class="pill" onclick="setFilter(this,'csv')"><span class="dot dot-blue"></span> MyMaps CSV</div>
-    <div class="pill" onclick="setFilter(this,'phase')"><span class="dot dot-orange"></span> Phase Dive</div>
+    <div class="pill" onclick="setFilter(this,'daydive')"><span class="dot dot-orange"></span> Day Dive</div>
     <div class="pill" onclick="setFilter(this,'permits')"><span class="dot dot-red"></span> Permits</div>
     <div class="pill" onclick="setFilter(this,'food')"><span class="dot dot-green"></span> Food Guide</div>
   </div>
@@ -327,20 +365,20 @@
     <div class="param-row double">
       <div class="param-half">
         <div class="param-lbl">Departure</div>
-        <input type="date" id="departDate" value="2026-06-01" oninput="syncHeader()"/>
+        <input type="text" id="departDate" placeholder="Enter date" oninput="syncHeader()"/>
       </div>
       <div class="param-half">
         <div class="param-lbl">Duration</div>
-        <input type="number" id="duration" value="80" min="14" max="180" placeholder="days" oninput="syncHeader()"/>
+        <input type="number" id="duration" min="14" max="180" placeholder="Enter days" oninput="syncHeader()"/>
       </div>
     </div>
     <div class="param-row">
       <div class="param-lbl">Start Location</div>
-      <input type="text" id="startLoc" value="Los Angeles, California, USA"/>
+      <input type="text" id="startLoc" placeholder="Enter start location" oninput="syncHeader()"/>
     </div>
     <div class="param-row">
       <div class="param-lbl">End Location</div>
-      <input type="text" id="endLoc" value="Deadhorse (Prudhoe Bay), Alaska, USA"/>
+      <input type="text" id="endLoc" placeholder="Enter end location" oninput="syncHeader()"/>
     </div>
     <div class="param-row">
       <div class="param-lbl">Special Instructions</div>
@@ -378,14 +416,14 @@
       </div>
       <div class="mode-tag tag-blue">CSV</div>
     </div>
-    <div class="mode-card" data-mode="phase" onclick="selectMode(this)">
+    <div class="mode-card" data-mode="daydive" onclick="openDayModal()">
       <div class="mode-left-bar"></div>
-      <div class="mode-emoji">🧭</div>
+      <div class="mode-emoji">🔍</div>
       <div class="mode-info">
-        <div class="mode-name">Phase Deep-Dive</div>
-        <div class="mode-desc">one phase · food · camping · permits</div>
+        <div class="mode-name">Day Deep-Dive</div>
+        <div class="mode-desc">single day · section 04 · full detail</div>
       </div>
-      <div class="mode-tag tag-orange">PHASE</div>
+      <div class="mode-tag tag-orange">DAY</div>
     </div>
     <div class="mode-card" data-mode="permits" onclick="selectMode(this)">
       <div class="mode-left-bar"></div>
@@ -407,11 +445,6 @@
     </div>
   </div>
 
-  <div class="phase-extra" id="phaseExtra">
-    <div class="param-lbl">Which Phase?</div>
-    <input type="text" id="phaseText" placeholder="e.g. British Columbia &amp; Yukon"/>
-  </div>
-
   <!-- ERROR -->
   <div class="error-box" id="errorBox"></div>
 
@@ -431,6 +464,28 @@
   <div style="height:20px;"></div>
 </div>
 
+<!-- DAY DIVE MODAL -->
+<div class="modal-overlay" id="dayModal" onclick="closeDayModal(event)">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-icon">🔍</div>
+      <div>
+        <div class="modal-title">Day Deep-Dive</div>
+        <div class="modal-sub">Pulls from Section 04 · Full Itinerary</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-lbl">Which day?</div>
+      <input type="number" id="dayNumber" min="1" max="180" placeholder="e.g. 15" class="modal-input"/>
+      <div class="modal-hint" id="dayHint">Enter a day number from your itinerary</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeDayModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmDayDive()">Generate →</button>
+    </div>
+  </div>
+</div>
+
 <!-- BOTTOM BAR -->
 <div class="bottom-bar">
   <button class="btn-gen" id="genBtn" onclick="runPlanner()">
@@ -444,17 +499,117 @@
   let docContent = '';
   let selectedMode = 'overview';
 
-  // Sync header stats
+  // Sync header stats from inputs
   function syncHeader() {
     const d = document.getElementById('duration').value;
     const dt = document.getElementById('departDate').value;
+    const start = document.getElementById('startLoc').value.trim();
+    const end = document.getElementById('endLoc').value.trim();
+
+    // Days
     document.getElementById('statDays').textContent = d || '—';
     document.getElementById('hdrDays').textContent = (d || '—') + ' days';
+
+    // Date
     if (dt) {
-      const parts = dt.split('-');
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      document.getElementById('hdrDate').textContent = `${months[parseInt(parts[1])-1]} ${parseInt(parts[2])} ${parts[0]}`;
+      document.getElementById('hdrDate').textContent = dt;
     }
+
+    // Route — shorten to city abbreviations for header
+    function abbrev(loc) {
+      if (!loc) return '—';
+      const parts = loc.split(',');
+      const city = parts[0].trim();
+      // Abbreviate state/province if present
+      const state = parts[1] ? parts[1].trim().split(' ').map(w => w[0]).join('').toUpperCase() : '';
+      return state ? `${city}, ${state}` : city;
+    }
+    document.getElementById('hdrRoute').textContent = `${abbrev(start)} → ${abbrev(end)}`;
+  }
+
+  // Parse reference doc for start/end location and auto-fill fields
+  function parseRefDoc(text) {
+    // Look for Start Location / End Location / Start Date / Total Duration in doc
+    const patterns = {
+      start: /start[\s_]location[\s|:]+([^\n|]+)/i,
+      end:   /end[\s_]location[\s|:]+([^\n|]+)/i,
+      date:  /start[\s_]date[\s|:]+([^\n|]+)/i,
+      duration: /total[\s_]duration[\s|:]+(\d+)/i,
+    };
+    let found = false;
+    const startMatch = text.match(patterns.start);
+    if (startMatch) {
+      const val = startMatch[1].trim().replace(/\|.*/, '').trim();
+      if (val) { document.getElementById('startLoc').value = val; found = true; }
+    }
+    const endMatch = text.match(patterns.end);
+    if (endMatch) {
+      const val = endMatch[1].trim().replace(/\|.*/, '').trim();
+      if (val) { document.getElementById('endLoc').value = val; found = true; }
+    }
+    const dateMatch = text.match(patterns.date);
+    if (dateMatch) {
+      const val = dateMatch[1].trim().replace(/\|.*/, '').trim();
+      if (val) { document.getElementById('departDate').value = val; found = true; }
+    }
+    const durMatch = text.match(patterns.duration);
+    if (durMatch) {
+      document.getElementById('duration').value = durMatch[1].trim();
+    }
+    if (found) syncHeader();
+    return found;
+  }
+
+  // Parse generated output and update stats bar
+  function updateStatsFromOutput(raw) {
+    // --- EST. MILES: sum all mileage numbers in the text ---
+    let totalMiles = 0;
+    // Match patterns like "185 mi", "~230 mi", "350 miles", "1,140 mi"
+    const miMatches = raw.match(/[\d,]+\s*(?:mi|miles)/gi) || [];
+    // Use the largest single cumulative number if present (e.g. "1,140 mi total")
+    const totalMatch = raw.match(/([\d,]+)\s*(?:mi|miles)\s*total/i);
+    if (totalMatch) {
+      totalMiles = parseInt(totalMatch[1].replace(/,/g, ''));
+    } else {
+      // Sum daily distances — grab numbers before " mi" that look like daily legs (< 800)
+      let legSum = 0;
+      miMatches.forEach(m => {
+        const n = parseInt(m.replace(/[^0-9]/g, ''));
+        if (n > 0 && n < 800) legSum += n;
+      });
+      // Rough dedup: if sum seems too large, scale back
+      totalMiles = legSum > 0 ? legSum : 0;
+    }
+
+    // --- NO SIGNAL: count ⚠ symbols or "no signal" / "no service" mentions ---
+    const noSignalCount = (raw.match(/⚠|no.signal|no.service|no.cell|limited.service|out.of.range/gi) || []).length;
+
+    // --- DAYS: count actual day rows in table (Day N pattern) ---
+    const dayMatches = raw.match(/^\|\s*\d+\s*\|/gm) || [];
+    const actualDays = dayMatches.length > 0 ? dayMatches.length : parseInt(document.getElementById('duration').value) || 0;
+
+    // --- PHASES: count phase headers ---
+    const phaseCount = (raw.match(/phase\s+\d+/gi) || []).length;
+
+    // Update DOM
+    document.getElementById('statDays').textContent = actualDays || document.getElementById('duration').value || '—';
+    document.getElementById('hdrDays').textContent = (actualDays || document.getElementById('duration').value || '—') + ' days';
+
+    if (totalMiles > 0) {
+      const formatted = totalMiles >= 1000
+        ? '~' + (Math.round(totalMiles / 100) * 100).toLocaleString()
+        : '~' + totalMiles;
+      document.getElementById('statMiles').textContent = formatted;
+    }
+
+    if (noSignalCount > 0) {
+      document.getElementById('statSignal').textContent = noSignalCount;
+    }
+
+    // Update bottom sub-line
+    const stops = dayMatches.length || '—';
+    document.getElementById('genSub').textContent =
+      `${stops} days · ${noSignalCount} no-signal zones · ${phaseCount > 0 ? phaseCount + ' phases' : 'route planned'}`;
   }
 
   // File upload
@@ -468,7 +623,8 @@
       const text = await file.text();
       docContent = text.slice(0, 14000);
       card.classList.add('has-file');
-      status.textContent = `✓ ${file.name} · ${(text.length/1000).toFixed(1)}k chars`;
+      const parsed = parseRefDoc(docContent);
+      status.textContent = `✓ ${file.name} · ${(text.length/1000).toFixed(1)}k chars${parsed ? ' · params loaded' : ''}`;
       document.getElementById('statDoc').textContent = '1';
     } catch { status.textContent = 'Error — use .txt or .md'; docContent = ''; }
   });
@@ -487,14 +643,59 @@
     document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     selectedMode = el.dataset.mode;
-    document.getElementById('phaseExtra').classList.toggle('show', selectedMode === 'phase');
     // sync pill
-    const modeMap = { overview:0, daily:1, csv:2, phase:3, permits:4, food:5 };
-    document.querySelectorAll('.pill').forEach((p,i) => {
-      p.classList.toggle('active', i === modeMap[selectedMode]);
-    });
-    // pill 0 = "All" = overview
+    const modeMap = { overview:0, daily:1, csv:2, daydive:3, permits:4, food:5 };
+    document.querySelectorAll('.pill').forEach((p,i) => p.classList.toggle('active', i === modeMap[selectedMode]));
     if (selectedMode === 'overview') document.querySelectorAll('.pill')[0].classList.add('active');
+  }
+
+  // Day dive modal
+  let selectedDay = null;
+
+  function openDayModal() {
+    // Mark the card selected visually
+    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+    document.querySelector('[data-mode="daydive"]').classList.add('selected');
+    selectedMode = 'daydive';
+    document.getElementById('dayNumber').value = '';
+    document.getElementById('dayHint').textContent = 'Enter a day number from your itinerary';
+    document.getElementById('dayHint').className = 'modal-hint';
+    document.getElementById('dayModal').classList.add('open');
+    setTimeout(() => document.getElementById('dayNumber').focus(), 300);
+  }
+
+  function closeDayModal(e) {
+    if (e && e.target !== document.getElementById('dayModal')) return;
+    document.getElementById('dayModal').classList.remove('open');
+  }
+
+  // Live hint — if docContent has a section 04, preview the day
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('dayNumber').addEventListener('input', function() {
+      const day = parseInt(this.value);
+      const hint = document.getElementById('dayHint');
+      if (!day || day < 1) { hint.textContent = 'Enter a day number from your itinerary'; hint.className = 'modal-hint'; return; }
+      if (docContent) {
+        // Try to find the day in section 04
+        const dayRow = docContent.match(new RegExp(`\\|\\s*${day}\\s*\\|([^\\n]+)`, 'i'));
+        if (dayRow) {
+          const cols = dayRow[1].split('|').map(c => c.trim()).filter(Boolean);
+          hint.textContent = `Day ${day} found: ${cols[0] || ''} → ${cols[1] || ''}`;
+          hint.className = 'modal-hint found';
+          return;
+        }
+      }
+      hint.textContent = `Will deep-dive Day ${day} from the itinerary`;
+      hint.className = 'modal-hint';
+    });
+  });
+
+  function confirmDayDive() {
+    const day = parseInt(document.getElementById('dayNumber').value);
+    if (!day || day < 1) { document.getElementById('dayHint').textContent = 'Please enter a valid day number'; return; }
+    selectedDay = day;
+    document.getElementById('dayModal').classList.remove('open');
+    runPlanner();
   }
 
   const SYSTEM = `You are Claud v1.1 — an experienced overland and expedition planner.
@@ -514,7 +715,7 @@ CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State a
     food: 'Regional food guide for the full route. Group by major hub. For each: 2-5 spots with name, type, what to order, timing. End with MUST-TRY SPECIALS. Mark top picks ★.',
   };
 
-  const LABELS = { overview:'Route Summary & Phases', daily:'Full Daily Itinerary', csv:'Google MyMaps CSV', phase:'Phase Deep-Dive', permits:'Permits & Crossings', food:'Regional Food Guide' };
+  const LABELS = { overview:'Route Summary & Phases', daily:'Full Daily Itinerary', csv:'Google MyMaps CSV', daydive:'Day Deep-Dive', permits:'Permits & Crossings', food:'Regional Food Guide' };
 
   function buildPrompt() {
     const depart = document.getElementById('departDate').value;
@@ -522,14 +723,39 @@ CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State a
     const start = document.getElementById('startLoc').value;
     const end = document.getElementById('endLoc').value;
     const notes = document.getElementById('extraNotes').value.trim();
-    const phaseText = document.getElementById('phaseText').value.trim();
-    const req = selectedMode === 'phase'
-      ? `Deep-dive for phase: "${phaseText || 'British Columbia & Yukon'}". Detailed day table, food (2-4 spots/hub), camping details, Permits & Border Crossings table.`
-      : PROMPTS[selectedMode];
-    let p = `TRIP:\n- Departure: ${depart}\n- Duration: ${duration} days\n- Start: ${start}\n- End: ${end}\n`;
+
+    let req;
+    if (selectedMode === 'daydive') {
+      const day = selectedDay || 1;
+      // Try to extract the day row from section 04 in the uploaded doc
+      let dayContext = '';
+      if (docContent) {
+        const rowMatch = docContent.match(new RegExp(`\\|\\s*0*${day}\\s*\\|([^\\n]+)`, 'i'));
+        if (rowMatch) dayContext = `\nThe uploaded reference doc shows Day ${day} as: | ${day} |${rowMatch[1]}`;
+      }
+      req = `Generate a detailed deep-dive for Day ${day} of this overland trip.${dayContext}
+
+If the reference document contains a Section 04 Full Itinerary table, extract the exact row for Day ${day} and use those details as the anchor. Then expand it fully with:
+
+1. **Day ${day} Overview** — date, start/end location, total miles, drive time
+2. **Detailed Drive Log** — turn-by-turn corridor notes, road conditions, highlights en route
+3. **Key Stops** — 2-4 stops with GPS coordinates, what to see/do, time needed
+4. **Overnight** — specific campsite or lodging (name, GPS, booking info, suitability for GX470)
+5. **Food** — breakfast/lunch/dinner recommendations near this day's route
+6. **Fuel** — nearest stations, distances, flag any gaps ⚠
+7. **Weather** — typical conditions for this location and time of year
+8. **Photography** — golden hour times, best shots, specific viewpoints
+9. **Next Day Preview** — brief look ahead at Day ${parseInt(day)+1}
+
+Use markdown headers. Be specific with place names and mile markers where known.`;
+    } else {
+      req = PROMPTS[selectedMode];
+    }
+
+    let p = `TRIP:\n- Departure: ${depart || 'TBD'}\n- Duration: ${duration || 'TBD'} days\n- Start: ${start || 'TBD'}\n- End: ${end || 'TBD'}\n`;
     if (notes) p += `- Instructions: ${notes}\n`;
     p += '\n';
-    if (docContent) p += `REFERENCE DOC:\n---\n${docContent}\n---\n\n`;
+    if (docContent) p += `REFERENCE DOC (includes Section 04 Full Itinerary if present):\n---\n${docContent}\n---\n\n`;
     p += `REQUEST:\n${req}`;
     return p;
   }
@@ -563,6 +789,7 @@ CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State a
       outputWrap.style.display = 'block';
       if (selectedMode === 'csv') { outputBody.classList.add('csv'); outputBody.textContent = raw; }
       else { outputBody.classList.remove('csv'); outputBody.innerHTML = renderMD(raw); }
+      updateStatsFromOutput(raw);
       sub.textContent = 'Done · tap COPY to export';
       setTimeout(() => outputWrap.scrollIntoView({ behavior:'smooth', block:'start' }), 120);
     } catch(err) {
