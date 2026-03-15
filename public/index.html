@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Claud v1.1 — Overland Planner</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
@@ -328,6 +330,35 @@
     .drawer-detail-val { font-size: 13px; color: var(--text); text-align: right; font-weight: 500; }
     .drawer-notes-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
     .drawer-anchor-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(192,57,43,0.12); color: var(--red); border: 1px solid rgba(192,57,43,0.3); font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-bottom: 12px; letter-spacing: 0.5px; }
+    /* ── MAP SCREEN ── */
+    .map-screen { padding: 0 !important; position: relative; overflow: hidden; }
+    .map-toolbar { background: var(--bg2); border-bottom: 1px solid var(--border2); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; position: absolute; top: 0; left: 0; right: 0; z-index: 10; }
+    .map-toolbar-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .map-toolbar-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 2px; }
+    .map-plot-btn { background: var(--orange); color: #fff; border: none; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; padding: 9px 16px; border-radius: 20px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    .map-plot-btn:active { background: #C45E00; }
+    .map-plot-btn:disabled { opacity: 0.45; }
+    #mapContainer { position: absolute; top: 57px; bottom: 0; left: 0; right: 0; z-index: 1; }
+    .map-empty { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -20%); text-align: center; padding: 20px; z-index: 5; width: 80%; }
+    .map-empty-title { font-size: 16px; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
+    .map-empty-sub { font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; line-height: 1.6; }
+    .map-legend { position: absolute; bottom: 14px; left: 14px; background: rgba(22,22,20,0.92); border: 1px solid var(--border2); border-radius: 8px; padding: 8px 12px; z-index: 10; display: flex; flex-direction: column; gap: 5px; }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Leaflet dark theme overrides */
+    .leaflet-container { background: #1a1a17 !important; font-family: 'Outfit', sans-serif; }
+    .leaflet-popup-content-wrapper { background: var(--sf2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); color: var(--text); }
+    .leaflet-popup-tip { background: var(--sf2); }
+    .leaflet-popup-content { margin: 12px 14px; }
+    .leaflet-popup-close-button { color: var(--text2) !important; top: 8px !important; right: 10px !important; }
+    .leaflet-control-zoom a { background: var(--surface) !important; color: var(--text) !important; border-color: var(--border2) !important; }
+    .leaflet-control-attribution { background: rgba(22,22,20,0.7) !important; color: var(--text3) !important; font-size: 9px !important; }
+    .leaflet-control-attribution a { color: var(--text3) !important; }
+    .map-popup-day { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--orange); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+    .map-popup-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .map-popup-meta { font-size: 11px; color: var(--text2); line-height: 1.6; }
+    .map-popup-meta strong { color: var(--text); }
   </style>
 </head>
 <body>
@@ -360,6 +391,7 @@
       <div class="nav-tab active" onclick="goTo('home',this)">Home</div>
       <div class="nav-tab" onclick="goTo('daily',this)"><span class="nav-dot d-or"></span> Daily Table</div>
       <div class="nav-tab" onclick="goTo('csv',this)"><span class="nav-dot d-bl"></span> MyMaps CSV</div>
+      <div class="nav-tab" onclick="goTo('map',this)"><span class="nav-dot d-gr"></span> Map</div>
       <div class="nav-tab" onclick="goTo('daydive',this)"><span class="nav-dot d-or"></span> Day Dive</div>
       <div class="nav-tab" onclick="goTo('permits',this)"><span class="nav-dot d-rd"></span> Permits</div>
       <div class="nav-tab" onclick="goTo('food',this)"><span class="nav-dot d-gr"></span> Food Guide</div>
@@ -408,7 +440,7 @@
           </div>
           <div class="card-half">
             <div class="field-lbl">Duration (days)</div>
-            <input type="number" id="c-duration" min="1" max="365" placeholder="80" oninput="syncCreate()"/>
+            <input type="text" id="c-duration" placeholder="e.g. 80" oninput="syncCreate()"/>
           </div>
         </div>
         <div class="card-row">
@@ -430,11 +462,11 @@
         <div class="card-row double">
           <div class="card-half">
             <div class="field-lbl">Fuel Range (mi)</div>
-            <input type="number" id="c-fuelRange" placeholder="400"/>
+            <input type="text" id="c-fuelRange" placeholder="e.g. 400"/>
           </div>
           <div class="card-half">
             <div class="field-lbl">Group Size</div>
-            <input type="number" id="c-groupSize" min="1" max="10" placeholder="1–2"/>
+            <input type="text" id="c-groupSize" placeholder="e.g. 1–2"/>
           </div>
         </div>
         <div class="card-row">
@@ -525,7 +557,7 @@
       <!-- Hidden fields still needed for other screens -->
       <div style="display:none;">
         <input type="text" id="departDate" oninput="syncHeader()"/>
-        <input type="number" id="duration" oninput="syncHeader()"/>
+        <input type="text" id="duration" oninput="syncHeader()"/>
         <input type="text" id="startLoc" oninput="syncHeader()"/>
         <input type="text" id="endLoc" oninput="syncHeader()"/>
         <textarea id="extraNotes"></textarea>
@@ -576,6 +608,28 @@
       <div class="out-wrap" id="out-csv">
         <div class="out-hdr"><div class="out-lbl"><div class="out-dot"></div>Google MyMaps CSV</div><button class="copy-btn" onclick="copyOut('body-csv')">COPY</button></div>
         <div class="out-body csv" id="body-csv"></div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="screen map-screen" id="screen-map">
+      <div class="map-toolbar">
+        <div class="map-toolbar-info">
+          <div class="map-toolbar-title" id="mapTitle">Route Map</div>
+          <div class="map-toolbar-sub" id="mapSub">Generate MyMaps CSV first to plot pins</div>
+        </div>
+        <button class="map-plot-btn" id="mapPlotBtn" onclick="plotMap()">⚡ Plot Route</button>
+      </div>
+      <div id="mapContainer"></div>
+      <div class="map-empty" id="mapEmpty">
+        <div style="font-size:36px;margin-bottom:12px;">🗺️</div>
+        <div class="map-empty-title">No route plotted yet</div>
+        <div class="map-empty-sub">Tap "Plot Route" to generate and map your itinerary, or generate a MyMaps CSV first</div>
+      </div>
+      <div class="map-legend" id="mapLegend" style="display:none;">
+        <div class="legend-item"><div class="legend-dot" style="background:#E8720C;"></div>Regular stop</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#C0392B;"></div>Fixed event ⚓</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#E67E22;"></div>Fuel gap ⚠</div>
       </div>
     </div>
 
@@ -742,11 +796,180 @@
       create:  '⚡ Generate from This Trip',
       daily:   '⚡ Generate Daily Table',
       csv:     '⚡ Generate MyMaps CSV',
+      map:     '⚡ Generate & Plot Route',
       daydive: '⚡ Generate Day Deep-Dive',
       permits: '⚡ Generate Permits Report',
       food:    '⚡ Generate Food Guide',
     };
     return labels[name] || '⚡ Generate';
+  }
+
+  // ── MAP ──
+  let leafletMap = null;
+  let mapInitialized = false;
+
+  function initMap() {
+    if (mapInitialized) return;
+    leafletMap = L.map('mapContainer', {
+      center: [45, -110],
+      zoom: 4,
+      zoomControl: true,
+    });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(leafletMap);
+    mapInitialized = true;
+  }
+
+  function parseCSV(csv) {
+    const lines = csv.trim().split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
+    // Parse header
+    const headers = parseCSVRow(lines[0]).map(h => h.trim().toLowerCase());
+    const titleIdx = headers.indexOf('title');
+    const latIdx   = headers.indexOf('latitude');
+    const lngIdx   = headers.indexOf('longitude');
+    const descIdx  = headers.indexOf('description');
+    const campIdx  = headers.indexOf('camping');
+    const nextIdx  = headers.indexOf('next stop');
+    if (latIdx === -1 || lngIdx === -1) return [];
+    return lines.slice(1).map(line => {
+      const cols = parseCSVRow(line);
+      const lat = parseFloat(cols[latIdx]);
+      const lng = parseFloat(cols[lngIdx]);
+      if (isNaN(lat) || isNaN(lng)) return null;
+      return {
+        title:   cols[titleIdx]  || '',
+        lat, lng,
+        desc:    cols[descIdx]   || '',
+        camping: cols[campIdx]   || '',
+        next:    cols[nextIdx]   || '',
+      };
+    }).filter(Boolean);
+  }
+
+  function parseCSVRow(row) {
+    const cols = [];
+    let cur = '', inQuote = false;
+    for (let i = 0; i < row.length; i++) {
+      const c = row[i];
+      if (c === '"') { inQuote = !inQuote; }
+      else if (c === ',' && !inQuote) { cols.push(cur.trim()); cur = ''; }
+      else { cur += c; }
+    }
+    cols.push(cur.trim());
+    return cols;
+  }
+
+  function makePinIcon(color, label) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="
+        background:${color};border-radius:50% 50% 50% 0;width:28px;height:28px;
+        transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.3);
+        box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
+        <span style="transform:rotate(45deg);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:#fff;line-height:1;">${label}</span>
+      </div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -30],
+    });
+  }
+
+  function plotPins(stops) {
+    if (!leafletMap) return;
+    // Clear existing layers except tile
+    leafletMap.eachLayer(layer => {
+      if (!(layer instanceof L.TileLayer)) leafletMap.removeLayer(layer);
+    });
+    if (!stops.length) return;
+    const coords = [];
+    const isAnchor = t => t.includes('⚓') || t.toLowerCase().includes('anchor');
+    const isFuel   = t => t.includes('⚠') || t.toLowerCase().includes('fuel');
+
+    stops.forEach((stop, i) => {
+      const color = isAnchor(stop.title + stop.desc) ? '#C0392B'
+                  : isFuel(stop.title + stop.desc)   ? '#E67E22'
+                  : '#E8720C';
+      const dayMatch = stop.title.match(/Day\s*(\d+)/i);
+      const dayNum = dayMatch ? dayMatch[1] : (i + 1);
+      const icon = makePinIcon(color, dayNum);
+      const marker = L.marker([stop.lat, stop.lng], { icon }).addTo(leafletMap);
+      // Build popup
+      const parts = stop.title.split('|');
+      const dayLbl = parts[0]?.trim() || `Day ${dayNum}`;
+      const locLbl = parts[1]?.trim() || stop.title;
+      let popupHtml = `
+        <div class="map-popup-day">${dayLbl}</div>
+        <div class="map-popup-title">${locLbl}</div>
+        <div class="map-popup-meta">`;
+      if (stop.next)    popupHtml += `<div><strong>Next:</strong> ${stop.next}</div>`;
+      if (stop.camping) popupHtml += `<div><strong>Camp:</strong> ${stop.camping.slice(0,80)}${stop.camping.length>80?'…':''}</div>`;
+      if (stop.desc)    popupHtml += `<div style="margin-top:5px;color:#A8A49E;">${stop.desc.slice(0,120)}${stop.desc.length>120?'…':''}</div>`;
+      popupHtml += '</div>';
+      marker.bindPopup(popupHtml, { maxWidth: 260 });
+      coords.push([stop.lat, stop.lng]);
+    });
+
+    // Draw route line
+    if (coords.length > 1) {
+      L.polyline(coords, {
+        color: '#E8720C', weight: 2.5, opacity: 0.7,
+        dashArray: '6, 6',
+      }).addTo(leafletMap);
+    }
+
+    // Fit bounds
+    leafletMap.fitBounds(L.latLngBounds(coords), { padding: [30, 30] });
+  }
+
+  async function plotMap() {
+    initMap();
+    document.getElementById('mapEmpty').style.display = 'none';
+    document.getElementById('mapLegend').style.display = '';
+    const csvText = document.getElementById('body-csv')?.textContent?.trim();
+    if (csvText && csvText.includes('Latitude')) {
+      // CSV already generated — plot it
+      const stops = parseCSV(csvText);
+      if (stops.length) {
+        plotPins(stops);
+        document.getElementById('mapTitle').textContent = `${stops.length} stops plotted`;
+        document.getElementById('mapSub').textContent = 'Tap any pin for details';
+        return;
+      }
+    }
+    // No CSV yet — generate it first
+    const btn = document.getElementById('mapPlotBtn');
+    btn.textContent = 'Generating…';
+    btn.disabled = true;
+    const prevScreen = currentScreen;
+    currentScreen = 'csv';
+    try {
+      const res = await fetch('/api/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system: SYSTEM, max_tokens: 4000, messages: [{ role:'user', content: buildPrompt() }] }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Server error');
+      const raw = (data.content||[]).map(b=>b.text||'').join('');
+      // Store in CSV screen too
+      const csvBody = document.getElementById('body-csv');
+      if (csvBody) { csvBody.textContent = raw; document.getElementById('out-csv').style.display = 'block'; }
+      const stops = parseCSV(raw);
+      plotPins(stops);
+      document.getElementById('mapTitle').textContent = `${stops.length} stops plotted`;
+      document.getElementById('mapSub').textContent = 'Tap any pin for details · CSV saved';
+    } catch(err) {
+      document.getElementById('mapEmpty').style.display = '';
+      document.getElementById('mapEmpty').querySelector('.map-empty-title').textContent = '⚠ ' + err.message;
+    } finally {
+      currentScreen = prevScreen === 'csv' ? 'map' : 'map';
+      btn.textContent = '⚡ Plot Route';
+      btn.disabled = false;
+    }
   }
 
   // ── NAVIGATION ──
@@ -758,7 +981,10 @@
     currentScreen = name;
     document.getElementById('genText').textContent = getScreenLabel(name);
     updateSummaryCards();
-    document.getElementById('genBar').style.display = name === 'home' ? 'none' : 'block';
+    document.getElementById('genBar').style.display = (name === 'home' || name === 'map') ? 'none' : 'block';
+    if (name === 'map') {
+      setTimeout(() => { initMap(); if (leafletMap) leafletMap.invalidateSize(); }, 50);
+    }
   }
 
   function toggleChip(el) {
@@ -1074,9 +1300,15 @@
     status.textContent = '';
     btn.disabled = true;
     if (!url) return;
+    // Safe URL parse — don't let it throw
+    let isValid = false;
+    try {
+      const parsed = new URL(url);
+      isValid = parsed.hostname.includes('google.com');
+    } catch { isValid = false; }
     const id = extractDriveId(url);
     const isDoc = isGoogleDoc(url);
-    if (id || isDoc) {
+    if (isValid && (id || isDoc)) {
       wrap.classList.add('valid');
       btn.disabled = false;
       status.className = 'modal-gdrive-status info';
@@ -1221,18 +1453,25 @@
     const clean = s => s.replace(/\|.*/, '').replace(/[*_]/g,'').trim();
     let found = false;
     const patterns = [
-      { re: /start[\s_]location[\s|:\t]+([^\n|]+)/i, id: 'startLoc' },
-      { re: /end[\s_]location[\s|:\t]+([^\n|]+)/i,   id: 'endLoc' },
-      { re: /start[\s_]date[\s|:\t]+([^\n|]+)/i,     id: 'departDate' },
-      { re: /total[\s_]?duration[\s|:\t]+([^\n|]+)/i,id: 'duration', num: true },
+      { re: /start[\s_]location[\s|:\t]+([^\n|]+)/i,      id: 'startLoc' },
+      { re: /end[\s_]location[\s|:\t]+([^\n|]+)/i,        id: 'endLoc' },
+      { re: /start[\s_]date[\s|:\t]+([^\n|]+)/i,          id: 'departDate' },
+      { re: /total[\s_]?duration[\s|:\t]+([^\n|]+)/i,     id: 'duration', numOnly: true },
     ];
-    patterns.forEach(({ re, id, num }) => {
+    patterns.forEach(({ re, id, numOnly }) => {
       const m = text.match(re);
       if (m) {
         let val = clean(m[1]);
-        if (num) val = val.match(/\d+/)?.[0] || '';
+        if (numOnly) val = (val.match(/\d+/) || [''])[0]; // digits only
         if (val) { document.getElementById(id).value = val; found = true; }
       }
+    });
+    // Also sync to create screen fields
+    const copyPairs = [['startLoc','c-startLoc'],['endLoc','c-endLoc'],['departDate','c-departDate'],['duration','c-duration']];
+    copyPairs.forEach(([src, dst]) => {
+      const v = document.getElementById(src)?.value;
+      const el = document.getElementById(dst);
+      if (v && el && !el.value) el.value = v;
     });
     if (found) syncHeader();
     return found;
@@ -1329,7 +1568,11 @@ CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State a
       if (!res.ok) throw new Error(data.error || 'Server error');
       const raw = (data.content||[]).map(b=>b.text||'').join('');
       outWrap.style.display = 'block';
-      if (currentScreen === 'csv') outBody.textContent = raw;
+      if (currentScreen === 'csv') {
+        outBody.textContent = raw;
+        // Auto-plot on map if map has been visited
+        if (mapInitialized) plotMap();
+      }
       else outBody.innerHTML = renderMD(raw);
       updateStatsFromOutput(raw);
       sub.textContent = 'Done · tap COPY to export';
@@ -1396,7 +1639,7 @@ CONSTRAINTS: Prioritize safety and realism. Legal border crossings only. State a
   }
 
   function goToByName(name) {
-    const names = ['create','home','daily','csv','daydive','permits','food'];
+    const names = ['create','home','daily','csv','map','daydive','permits','food'];
     const tabs = document.querySelectorAll('.nav-tab');
     goTo(name, tabs[names.indexOf(name)]);
     tabs[names.indexOf(name)]?.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
