@@ -1559,7 +1559,7 @@
     }
   });
 
-  function confirmUpload() {
+  async function confirmUpload() {
     if (!pendingDocContent) return;
     docContent = pendingDocContent;
     parseRefDoc(docContent);
@@ -1567,36 +1567,47 @@
     const fileTitle = document.getElementById('modalUploadTitle').textContent;
     if (btn) { btn.textContent = `✓ ${fileTitle}`; btn.classList.add('loaded'); }
     document.getElementById('statDoc').textContent = '1';
-    document.getElementById('uploadModal').classList.remove('open');
+
+    // Update confirm button to show progress
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    confirmBtn.textContent = 'Generating Day 1…';
+    confirmBtn.disabled = true;
+
+    // Build cards first so home is ready
     refreshHomeCards();
+
+    // Generate Day 1 immediately before navigating
+    await generateDayOverview(1);
+
+    // Now navigate to home — Day 1 card already has content
+    document.getElementById('uploadModal').classList.remove('open');
+    confirmBtn.textContent = 'Create Trip →';
+    confirmBtn.disabled = false;
     goToByName('home');
-    // Auto-generate deep-dives for all days in the background
-    setTimeout(() => generateAllDayOverviews(), 300);
+
+    // Generate Day 2 in background after navigation
+    setTimeout(() => generateDayOverview(2), 400);
   }
 
-  // Auto-generate full Day Deep-Dive for Day 1 and Day 2 on upload
-  async function generateAllDayOverviews() {
-    if (!tripDays.length) return;
+  // Generate deep-dive for a single day and cache it
+  async function generateDayOverview(dayNum) {
+    const d = tripDays.find(t => t.day === dayNum);
+    if (!d || !d.location || dayOverviews[dayNum]) return;
     const lbl = document.getElementById('homeTripLabel');
-    const originalLabel = lbl.textContent;
-    const targetDays = tripDays.filter(d => d.day <= 2 && d.location);
-    if (!targetDays.length) return;
+    const originalLabel = lbl ? lbl.textContent : '';
+    if (lbl) lbl.textContent = `${originalLabel} · Generating Day ${dayNum}…`;
+    try {
+      const depart = document.getElementById('departDate').value || document.getElementById('c-departDate').value;
+      const start  = document.getElementById('startLoc').value   || document.getElementById('c-startLoc').value;
+      const end    = document.getElementById('endLoc').value     || document.getElementById('c-endLoc').value;
+      let dayCtx = '';
+      if (docContent) {
+        const m = docContent.match(new RegExp(`\\|\\s*0*${dayNum}\\s*\\|([^\\n]+)`, 'i'));
+        if (m) dayCtx = `\nReference doc shows Day ${dayNum}: | ${dayNum} |${m[1]}`;
+      }
+      const prompt = `Generate a detailed deep-dive for Day ${dayNum} of this overland trip.${dayCtx}
 
-    for (const d of targetDays) {
-      if (dayOverviews[d.day]) continue;
-      lbl.textContent = `${originalLabel} · Generating Day ${d.day}…`;
-      try {
-        const depart = document.getElementById('departDate').value || document.getElementById('c-departDate').value;
-        const start  = document.getElementById('startLoc').value   || document.getElementById('c-startLoc').value;
-        const end    = document.getElementById('endLoc').value     || document.getElementById('c-endLoc').value;
-        let dayCtx = '';
-        if (docContent) {
-          const m = docContent.match(new RegExp(`\\|\\s*0*${d.day}\\s*\\|([^\\n]+)`, 'i'));
-          if (m) dayCtx = `\nReference doc shows Day ${d.day}: | ${d.day} |${m[1]}`;
-        }
-        const prompt = `Generate a detailed deep-dive for Day ${d.day} of this overland trip.${dayCtx}
-
-TRIP: ${start} to ${end} | Departure: ${depart} | Day ${d.day}: ${d.location}${d.notes ? ' | Notes: ' + d.notes : ''}
+TRIP: ${start} to ${end} | Departure: ${depart} | Day ${dayNum}: ${d.location}${d.notes ? ' | Notes: ' + d.notes : ''}
 
 Use these markdown sections:
 ## Day Overview
@@ -1610,28 +1621,25 @@ Best camping or lodging near ${d.location}.
 ## Food
 1-2 local food recommendations near the route.`;
 
-        const res = await fetch('/api/plan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ system: SYSTEM, max_tokens: 600, messages: [{ role: 'user', content: prompt }] }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          const raw = (data.content || []).map(b => b.text || '').join('').trim();
-          const overviewMatch = raw.match(/##\s*Day\s+Overview[^\n]*\n+([\s\S]+?)(?=\n##|$)/i);
-          if (overviewMatch) {
-            const text = overviewMatch[1].replace(/\*\*/g,'').replace(/[*_`]/g,'').replace(/\n+/g,' ').trim();
-            dayOverviews[d.day] = text.slice(0, 240) + (text.length > 240 ? '…' : '');
-          }
-          // Store full deep-dive for the drawer
-          const idx = tripDays.findIndex(t => t.day === d.day);
-          if (idx >= 0) tripDays[idx].fullDive = raw;
-          buildDayCards(tripDays);
+      const res = await fetch('/api/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system: SYSTEM, max_tokens: 600, messages: [{ role: 'user', content: prompt }] }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const raw = (data.content || []).map(b => b.text || '').join('').trim();
+        const overviewMatch = raw.match(/##\s*Day\s+Overview[^\n]*\n+([\s\S]+?)(?=\n##|$)/i);
+        if (overviewMatch) {
+          const text = overviewMatch[1].replace(/\*\*/g,'').replace(/[*_`]/g,'').replace(/\n+/g,' ').trim();
+          dayOverviews[dayNum] = text.slice(0, 240) + (text.length > 240 ? '…' : '');
         }
-      } catch (e) { /* silently skip */ }
-      await new Promise(r => setTimeout(r, 500));
-    }
-    lbl.textContent = originalLabel;
+        const idx = tripDays.findIndex(t => t.day === dayNum);
+        if (idx >= 0) tripDays[idx].fullDive = raw;
+        buildDayCards(tripDays);
+      }
+    } catch (e) { /* silently skip */ }
+    if (lbl) lbl.textContent = originalLabel;
   }
 
   async function readDocx(file) {
