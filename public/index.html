@@ -1109,70 +1109,113 @@
   // ── DAY CARDS & DRAWER ──
 
   // Parse Section 04 Full Itinerary from doc text into day objects
+  // Parse Section 04 Full Itinerary — or fall back to Section 03 Fixed Events
   function parseDaysFromDoc(text) {
     const days = [];
-    // Match table rows like: | 1 | 4/21/26 | Las Vegas, NV | notes |
-    const rows = text.match(/\|\s*\d+\s*\|[^\n]+/g) || [];
-    rows.forEach(row => {
+    const placeholder = /^\[.*\]$|^\[value\]$/i;
+
+    // ── Try Section 04 first ──
+    const sec04 = text.match(/04\s+FULL\s+ITINERARY[\s\S]*?(?=\n#|\n05|\z)/i)?.[0] || text;
+    const rows04 = sec04.match(/\|\s*\d+\s*\|[^\n]+/g) || [];
+    rows04.forEach(row => {
       const cols = row.split('|').map(c => c.trim()).filter(Boolean);
-      if (cols.length >= 2) {
-        const dayNum = parseInt(cols[0]);
-        if (!dayNum || dayNum > 365) return;
-        days.push({
-          day:      dayNum,
-          date:     cols[1] || '',
-          location: cols[2] || '',
-          notes:    cols[3] || '',
-          miles:    '',
-          drive:    '',
-          overnight:'',
-          isAnchor: false,
-        });
-      }
+      if (cols.length < 2) return;
+      const dayNum = parseInt(cols[0]);
+      if (!dayNum || dayNum > 365) return;
+      const date     = cols[1] || '';
+      const location = cols[2] || '';
+      const notes    = cols[3] || '';
+      // Skip if location is a placeholder
+      if (placeholder.test(location) && placeholder.test(notes)) return;
+      days.push({ day: dayNum, date, location: placeholder.test(location) ? '' : location, notes: placeholder.test(notes) ? '' : notes, miles:'', drive:'', overnight:'', isAnchor: false });
     });
+
+    // ── Fall back to Section 03 Fixed Events if 04 had no real data ──
+    const usable = days.filter(d => d.location);
+    if (!usable.length) {
+      const sec03 = text.match(/03\s+FIXED\s+DATE\s+EVENTS[\s\S]*?(?=\n#|\n04|\z)/i)?.[0] || '';
+      const rows03 = sec03.match(/\d{1,2}\/\d{1,2}\/\d{2,4}\s*\|[^\n]+/g) || [];
+      let dayNum = 1;
+      rows03.forEach(row => {
+        const cols = row.split('|').map(c => c.trim());
+        const date     = cols[0] || '';
+        const location = cols[1] || '';
+        const notes    = cols[2] || '';
+        if (placeholder.test(location)) return;
+        days.push({ day: dayNum++, date, location, notes: placeholder.test(notes) ? '' : notes, miles:'', drive:'', overnight:'', isAnchor: true });
+      });
+    } else {
+      // Mark days that appear in Section 03 as anchors
+      const anchorLocs = parseAnchorsFromDoc(text);
+      days.forEach(d => {
+        if (anchorLocs.some(a => d.location && a.location && d.location.toLowerCase().includes(a.location.toLowerCase()))) {
+          d.isAnchor = true;
+          if (a.notes) d.anchorNote = a.notes;
+        }
+      });
+    }
     return days;
   }
 
-  // Parse fixed events from doc to mark anchor days
+  // Parse fixed events from Section 03 — returns rich objects
   function parseAnchorsFromDoc(text) {
     const anchors = [];
-    const rows = text.match(/\d{1,2}\/\d{1,2}\/\d{2,4}\s*\|[^\n]+/g) || [];
+    const sec03 = text.match(/03\s+FIXED\s+DATE\s+EVENTS[\s\S]*?(?=\n#|\n04|\z)/i)?.[0] || text;
+    const rows = sec03.match(/\d{1,2}\/\d{1,2}\/\d{2,4}\s*\|[^\n]+/g) || [];
     rows.forEach(row => {
       const cols = row.split('|').map(c => c.trim());
-      if (cols[0]) anchors.push(cols[0].trim());
+      anchors.push({ date: cols[0]||'', location: cols[1]||'', notes: cols[2]||'' });
     });
     return anchors;
   }
 
   function buildDayCards(days) {
     tripDays = days;
-    const list = document.getElementById('dayCardsList');
-    const empty = document.getElementById('homeEmpty');
-    const cardsWrap = document.getElementById('homeDayCards');
-    if (!days.length) { empty.style.display = ''; cardsWrap.style.display = 'none'; return; }
+    const list    = document.getElementById('dayCardsList');
+    const empty   = document.getElementById('homeEmpty');
+    const wrap    = document.getElementById('homeDayCards');
+    if (!days.length) { empty.style.display=''; wrap.style.display='none'; return; }
     empty.style.display = 'none';
-    cardsWrap.style.display = '';
-    const start = document.getElementById('startLoc').value || document.getElementById('c-startLoc').value;
-    const end = document.getElementById('endLoc').value || document.getElementById('c-endLoc').value;
-    if (start && end) document.getElementById('homeTripLabel').textContent = `${start} → ${end}`;
-    list.innerHTML = days.map((d, i) => `
-      <div class="day-card${d.isAnchor ? ' anchor' : ''}" onclick="openDrawer(${i})">
-        <div class="day-num-badge">${d.isAnchor ? '⚓' : d.day}</div>
+    wrap.style.display  = '';
+
+    // Trip label from parsed params
+    const start = document.getElementById('c-startLoc').value || document.getElementById('startLoc').value;
+    const end   = document.getElementById('c-endLoc').value   || document.getElementById('endLoc').value;
+    const lbl   = document.getElementById('homeTripLabel');
+    if (start && end) lbl.textContent = `${start} → ${end}`;
+    else if (start)   lbl.textContent = `From ${start}`;
+    else              lbl.textContent = 'Trip Itinerary';
+
+    list.innerHTML = days.map((d, i) => {
+      const hasNote = d.notes && d.notes !== '[value]' && d.notes.trim();
+      const anchor  = d.isAnchor;
+      return `
+      <div class="day-card${anchor ? ' anchor' : ''}" onclick="openDrawer(${i})">
+        <div class="day-num-badge">${anchor ? '⚓' : d.day}</div>
         <div class="day-card-info">
-          <div class="day-card-title">${d.location || 'Day ' + d.day}</div>
+          <div class="day-card-title">${d.location || `Day ${d.day}`}</div>
           <div class="day-card-meta">
             <span>${d.date || '—'}</span>
             ${d.miles ? `<span class="miles">~${d.miles} mi</span>` : ''}
             ${d.drive ? `<span>${d.drive}</span>` : ''}
+            ${anchor ? `<span style="color:var(--red);">Fixed event</span>` : ''}
           </div>
-          ${d.notes && d.notes !== '[value]' ? `<div class="day-card-note">${d.notes}</div>` : ''}
+          ${hasNote ? `<div class="day-card-note">${d.notes}</div>` : ''}
         </div>
         <div class="day-card-chevron">›</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
+  }
+
+  // Refresh home cards from current docContent
+  function refreshHomeCards() {
+    const text = docContent;
+    if (!text) return;
+    const days = parseDaysFromDoc(text);
+    if (days.length) buildDayCards(days);
   }
 
   function openDrawer(index) {
-    const d = tripDays[index];
     if (!d) return;
     drawerDayIndex = index;
     document.getElementById('drawerDayLabel').textContent = `Day ${d.day}`;
